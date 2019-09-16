@@ -1,0 +1,11 @@
+- entries:
+    - interface: mbcom.interfaces.IStorage
+      name: yml
+    - interface: mbcom.interfaces.IStorage
+      name:
+  class: mbcom.implements.storage_yml_file.Storage
+
+- entries:
+    - interface: mbcom.interfaces.IService
+      name: redis
+  class: mbcom.implements.service_redis.Service

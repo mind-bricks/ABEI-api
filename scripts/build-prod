@@ -1,0 +1,8 @@
+#!/usr/bin/env bash
+
+cp misc/resolv.conf /etc/resolv.conf && \
+pip install --upgrade pip && \
+pip install -r requirements-prod.txt && \
+rm -fr ~/.cache/pip
+
+# todo: add test command

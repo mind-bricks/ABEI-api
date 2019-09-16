@@ -1,0 +1,16 @@
+version: '3.1'
+
+services:
+  mb-back-pump:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: docker.mind-bricks.com/mind-bricks/mb-back-pump
+    restart: on-failure
+    ports:
+      - "8000:80"
+    networks:
+      - mb-back
+
+networks:
+  mb-back:
