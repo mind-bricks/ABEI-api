@@ -1,15 +1,19 @@
-from redis import Redis
-
 from mbcom.interfaces import (
     IStorage,
     IService,
     service_entry as _
 )
+from .service_basic import ServiceBasic
 
 
-class Service(IService):
+class Service(ServiceBasic, IService):
+
+    @classmethod
+    def get_dependencies(cls):
+        return ['redis']
 
     def __init__(self, service_site, **kwargs):
+        from redis import Redis
         service = service_site.get_service(_(IStorage))
         redis_host = service.get_value('redis:host')
         redis_port = service.get_value('redis:port')

@@ -5,6 +5,7 @@ from mbcom.interfaces import (
     IServiceConfiguration,
     ServiceEntry,
 )
+from .service_basic import ServiceBasic
 
 
 def import_string(dotted_path):
@@ -47,6 +48,8 @@ class ServiceSite(IServiceSite):
 
     def register_service(self, entries, service_class, **kwargs):
         assert isinstance(entries, (tuple, list))
+        # ensure dependencies first
+        service_class.ensure_dependencies()
         # create service instance
         service = service_class(self, **kwargs)
         for e in entries:
@@ -63,7 +66,11 @@ class ServiceSite(IServiceSite):
         return service
 
 
-class ServiceConfiguration(IServiceConfiguration):
+class ServiceConfiguration(ServiceBasic, IServiceConfiguration):
+
+    @classmethod
+    def get_dependencies(cls):
+        return ['PyYAML']
 
     @staticmethod
     def config_parse(parser, file_or_filename):

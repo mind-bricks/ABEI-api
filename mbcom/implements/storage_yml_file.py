@@ -1,18 +1,23 @@
 from os import getenv
 
-from yaml import (
-    safe_load,
-    # safe_dump,
-)
-
 from mbcom.interfaces import (
     IStorage,
     service_entry as _
 )
+from .service_basic import ServiceBasic
 
 
-class Storage(IStorage):
+class Storage(ServiceBasic, IStorage):
+    @classmethod
+    def get_dependencies(cls):
+        return ['PyYAML']
+
     def __init__(self, service_site, **kwargs):
+        from yaml import (
+            safe_load,
+            # safe_dump,
+        )
+
         service = service_site.query_service(_(IStorage, 'argv'))
         self.filename = (
             service and service.get_value('config_file') or

@@ -1,8 +1,7 @@
 # tensorflow==1.12.0
 # tensorflow-gpu==1.12.0
 flask==1.0.3
-flask-cors==3.0.8
-flask-script==2.0.6
-marshmallow==2.19.5
-numpy==1.17.0
-PyYAML==5.1.2
+# flask-cors==3.0.8
+# flask-script==2.0.6
+# marshmallow==2.19.5
+# numpy==1.17.0

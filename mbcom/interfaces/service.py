@@ -19,8 +19,14 @@ class IService(ABC):
     the root interface for service
     """
 
+    @classmethod
+    def ensure_dependencies(cls):
+        """
+        install all dependencies of current service
+        """
 
-class IServiceSite(ABC):
+
+class IServiceSite(IService):
     @abstractmethod
     def get_service(self, entry):
         """
@@ -41,7 +47,8 @@ class IServiceSite(ABC):
         """
 
 
-class IServiceConfiguration(ABC):
+class IServiceConfiguration(IService):
+
     @abstractmethod
     def load_json(self, service_site, file_or_filename):
         """

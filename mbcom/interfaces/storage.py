@@ -1,6 +1,6 @@
 from .service import (
     abstractmethod,
-    IService
+    IService,
 )
 
 
