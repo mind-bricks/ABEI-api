@@ -6,6 +6,7 @@ from mbcom.interfaces import (
     ServiceEntry,
 )
 from .service_basic import ServiceBasic
+from .utils import FileLikeWrapper
 
 
 def import_string(dotted_path):
@@ -73,19 +74,11 @@ class ServiceConfiguration(ServiceBasic, IServiceConfiguration):
         return ['PyYAML']
 
     @staticmethod
-    def config_parse(parser, file_or_filename):
-        if isinstance(file_or_filename, str):
-            with open(file_or_filename, 'r') as f:
-                return parser(f)
-        else:
-            return parser(file_or_filename)
-
-    @staticmethod
-    def config_process(service_site, configuration):
-        if not isinstance(configuration, (tuple, list)):
+    def load_object(service_site, config_object):
+        if not isinstance(config_object, (tuple, list)):
             raise ValueError('invalid service configuration file')
 
-        for config_item in configuration:
+        for config_item in config_object:
             service_class_name = config_item.pop('class', '')
             service_entries_name = config_item.pop('entries', [])
             if not isinstance(service_entries_name, (tuple, list)):
@@ -118,16 +111,18 @@ class ServiceConfiguration(ServiceBasic, IServiceConfiguration):
 
     def load_json(self, service_site, file_or_filename):
         import json
-        self.config_parse(lambda f: self.config_process(
-            service_site, json.loads(f.read())), file_or_filename)
+
+        with FileLikeWrapper(file_or_filename) as file:
+            self.load_object(service_site, json.loads(file.read()))
 
     def save_json(self, service_site, file_or_filename):
         raise NotImplementedError
 
     def load_yaml(self, service_site, file_or_filename):
         import yaml
-        self.config_parse(lambda f: self.config_process(
-            service_site, yaml.safe_load(f)), file_or_filename)
+
+        with FileLikeWrapper(file_or_filename) as file:
+            self.load_object(service_site, yaml.safe_load(file))
 
     def save_yaml(self, service_site, file_or_filename):
         raise NotImplementedError

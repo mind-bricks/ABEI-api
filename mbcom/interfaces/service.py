@@ -1,5 +1,5 @@
 from abc import (
-    ABC,
+    ABCMeta,
     abstractmethod,
 )
 
@@ -14,7 +14,7 @@ class ServiceEntry(object):
         self.name = name or ''
 
 
-class IService(ABC):
+class IService(metaclass=ABCMeta):
     """
     the root interface for service
     """

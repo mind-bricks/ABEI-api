@@ -3,7 +3,7 @@ __all__ = [
     'ServiceSite',
 ]
 
-from .service_site_general import (
+from .service_general import (
     ServiceConfiguration,
     ServiceSite,
 )
