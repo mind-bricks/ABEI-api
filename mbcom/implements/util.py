@@ -15,3 +15,13 @@ class FileLikeWrapper(object):
     def __exit__(self, exc_type, exc_val, exc_tb):
         if self.hold and hasattr(self.file, 'close'):
             self.file.close()
+
+
+class LazyProperty(object):
+    def __init__(self, func):
+        self.func = func
+
+    def __get__(self, instance, cls):
+        value = self.func(instance)
+        setattr(instance, self.func.__name__, value)
+        return value

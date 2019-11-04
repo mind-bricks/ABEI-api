@@ -3,8 +3,8 @@ import os
 
 from flask import Flask
 from mbcom.implements import (
-    ServiceConfiguration,
     ServiceSite,
+    ServiceSiteConfiguration,
 )
 
 os.environ.setdefault(
@@ -13,7 +13,7 @@ os.environ.setdefault(
 service_site = ServiceSite()
 service_site.ensure_dependencies()
 
-service_config = ServiceConfiguration()
+service_config = ServiceSiteConfiguration()
 service_config.ensure_dependencies()
 
 service_config.load_yaml(

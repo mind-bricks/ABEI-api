@@ -2,11 +2,11 @@ from importlib import import_module
 
 from mbcom.interfaces import (
     IServiceSite,
-    IServiceConfiguration,
+    IServiceSiteConfiguration,
     ServiceEntry,
 )
 from .service_basic import ServiceBasic
-from .utils import FileLikeWrapper
+from .util import FileLikeWrapper
 
 
 def import_string(dotted_path):
@@ -67,7 +67,7 @@ class ServiceSite(IServiceSite):
         return service
 
 
-class ServiceConfiguration(ServiceBasic, IServiceConfiguration):
+class ServiceSiteConfiguration(ServiceBasic, IServiceSiteConfiguration):
 
     @classmethod
     def get_dependencies(cls):
