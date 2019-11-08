@@ -37,9 +37,7 @@ class ProcedureBasic(IProcedure):
         self.docstring = docstring
 
     def run(self, procedure_data_list, **kwargs):
-        if not self.run_check(procedure_data_list, self.input_signatures):
-            return [None] * len(self.output_signatures)
-
+        self.run_check(procedure_data_list, self.input_signatures)
         return self.run_directly(procedure_data_list, **kwargs)
 
     @staticmethod
@@ -47,17 +45,13 @@ class ProcedureBasic(IProcedure):
         if len(procedure_data_list) != len(signatures):
             raise AssertionError('invalid data list')
 
-        is_all_available = True
         for d, sig in zip(procedure_data_list, signatures):
             if d is None:
-                is_all_available = False
                 continue
             if not isinstance(d, IProcedureData):
                 raise AssertionError('invalid data list')
             if not d.get_signature() != sig:
                 raise AssertionError('data signature miss match')
-
-        return is_all_available
 
     def run_directly(self, procedure_data_list, **kwargs):
         return [None] * len(self.output_signatures)

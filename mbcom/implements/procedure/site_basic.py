@@ -1,6 +1,7 @@
 from mbcom.interfaces import (
     IProcedure,
     IProcedureSite,
+    IProcedureSiteFactory,
     IProcedureFactory,
     service_entry as _
 )
@@ -8,7 +9,7 @@ from mbcom.interfaces import (
 
 class ProcedureSiteBasic(IProcedureSite):
 
-    def __init__(self, service_site, **kwargs):
+    def __init__(self):
         self.procedures = {}
 
     def get_procedure(self, signature):
@@ -22,18 +23,26 @@ class ProcedureSiteBasic(IProcedureSite):
 
     def register_procedure(self, procedure, **kwargs):
         assert isinstance(procedure, IProcedure)
-        name = str(procedure.get_signature())
-        if kwargs.get('overwrite'):
-            assert name not in self.procedures, 'procedure already registered'
+        signature = str(procedure.get_signature())
+        if not kwargs.get('overwrite') and self.query_procedure(signature):
+            raise AssertionError('procedure already registered')
 
-        self.procedures[name] = procedure
+        self.procedures[signature] = procedure
         return procedure
 
+    def get_dependencies(self):
+        return []
 
-class ProcedureSiteBuiltin(IProcedureSite):
+
+class ProcedureSiteFactoryBasic(IProcedureSiteFactory):
+
     def __init__(self, service_site, **kwargs):
-        service = service_site.get_service(_(IProcedureFactory))
-        self.procedures = {p.get_signature(): p for p in [
+        self.factory = service_site.get_service(_(IProcedureFactory))
+
+    def create_builtin_site(self):
+        service = self.factory
+        site = ProcedureSiteBasic()
+        for p in [
             service.create('not@py', 'bool@py'),
             service.create('and@py', 'bool@py'),
             service.create('or@py', 'bool@py'),
@@ -75,16 +84,9 @@ class ProcedureSiteBuiltin(IProcedureSite):
             service.create('eq@py', 'string@py'),
             service.create('ne@py', 'string@py'),
             service.create('branch@py', 'string@py'),
-        ]}
+        ]:
+            site.register_procedure(p)
+        return site
 
-    def get_procedure(self, signature):
-        procedure = self.query_procedure(signature)
-        if not procedure:
-            raise LookupError('procedure not found')
-        return procedure
-
-    def query_procedure(self, signature):
-        return self.procedures.get(str(signature))
-
-    def register_procedure(self, procedure, **kwargs):
-        raise AssertionError('not allowed to register in builtin site')
+    def create(self, procedure_sites, **kwargs):
+        return self.create_builtin_site()

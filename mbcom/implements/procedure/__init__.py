@@ -1,34 +1,17 @@
 __all__ = [
-    'ProcedureDataBasic',
-    'ProcedureDataFactoryBuiltin',
-
-    'ProcedureBasic',
-    'ProcedureBuiltin',
-    'ProcedureFactoryBuiltin',
-
-    'ProcedureFactoryComposite',
-
-    'ProcedureSiteBasic',
-    'ProcedureSiteBuiltin',
+    'ProcedureDataFactory',
+    'ProcedureFactory',
+    'ProcedureSiteFactory',
     'ProcedureSiteConfiguration',
 ]
 
 from .data_basic import (
-    ProcedureDataBasic,
-    ProcedureDataFactoryBuiltin,
-)
-from .procedure_basic import (
-    ProcedureBasic,
-    ProcedureBuiltin,
-    ProcedureFactoryBuiltin,
+    ProcedureDataFactoryBuiltin as ProcedureDataFactory,
 )
 from .procedure_composite import (
-    ProcedureFactoryComposite,
-)
-from .site_basic import (
-    ProcedureSiteBasic,
-    ProcedureSiteBuiltin,
+    ProcedureFactoryComposite as ProcedureFactory,
 )
 from .site_composite import (
+    ProcedureSiteFactoryComposite as ProcedureSiteFactory,
     ProcedureSiteConfiguration,
 )

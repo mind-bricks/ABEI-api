@@ -1,12 +1,49 @@
 from mbcom.interfaces import (
     IProcedureFactory,
     IProcedureJointFactory,
+    IProcedureSite,
     IProcedureSiteConfiguration,
     service_entry as _
 )
 
 from ..service_basic import ServiceBasic
-from ..util import FileLikeWrapper
+from ..util import (
+    FileLikeWrapper,
+    LazyProperty,
+)
+
+from .site_basic import (
+    ProcedureSiteBasic,
+    ProcedureSiteFactoryBasic,
+)
+
+
+class ProcedureSiteComposite(ProcedureSiteBasic):
+    def __init__(self, procedure_sites=None):
+        super().__init__()
+        self.procedure_sites = procedure_sites or []
+
+    def query_procedure(self, signature):
+        for s in self.procedure_sites:
+            procedure = s.query_procedure(signature)
+            if procedure:
+                return procedure
+        return super().query_procedure(signature)
+
+    def get_dependencies(self):
+        return self.procedure_sites
+
+
+class ProcedureSiteFactoryComposite(ProcedureSiteFactoryBasic):
+    @LazyProperty
+    def builtin_site(self):
+        return self.create_builtin_site()
+
+    def create(self, procedure_sites, **kwargs):
+        assert isinstance(procedure_sites, (list, tuple))
+        for p in procedure_sites:
+            assert isinstance(p, IProcedureSite)
+        return ProcedureSiteComposite(procedure_sites or [self.builtin_site])
 
 
 class ProcedureSiteConfiguration(ServiceBasic, IProcedureSiteConfiguration):
@@ -76,12 +113,12 @@ class ProcedureSiteConfiguration(ServiceBasic, IProcedureSiteConfiguration):
 
     def load_joints(self, procedure_site, procedure, joint_objects):
         if not isinstance(joint_objects, dict):
-            raise ValueError('invalid procedure flows')
+            raise ValueError('invalid procedure joints')
 
-        # create flows
+        # create joints
         for joint_signature, joint_object in joint_objects.items():
             if not isinstance(joint_object, dict):
-                raise ValueError('invalid procedure flow config')
+                raise ValueError('invalid procedure joint config')
             joint_procedure = procedure_site.get_procedure(
                 joint_object.get('procedure'))
             joint = self.procedure_joint_factory.create(
@@ -91,11 +128,11 @@ class ProcedureSiteConfiguration(ServiceBasic, IProcedureSiteConfiguration):
             )
             joint_object['instance'] = joint
 
-        # connect flows
+        # connect joints
         for joint_signature, joint_object in joint_objects.items():
             input_joint_objects = joint_object.get('input_joints', [])
             if not isinstance(input_joint_objects, list):
-                raise ValueError('invalid procedure flow config')
+                raise ValueError('invalid procedure joint config')
 
             joint = joint_object['instance']
             input_joints = []
@@ -107,7 +144,7 @@ class ProcedureSiteConfiguration(ServiceBasic, IProcedureSiteConfiguration):
                     input_joints.append(
                         joint_objects[joint_key]['instance'])
                 else:
-                    raise ValueError('invalid flow joint')
+                    raise ValueError('invalid joint')
                 input_indices.append(i)
             joint.set_joints(input_joints, input_indices)
 

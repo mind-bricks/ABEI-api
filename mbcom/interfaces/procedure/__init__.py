@@ -9,6 +9,7 @@ __all__ = [
     'IProcedureJointFactory',
 
     'IProcedureSite',
+    'IProcedureSiteFactory',
     'IProcedureSiteConfiguration',
 ]
 
@@ -29,5 +30,6 @@ from .joint import (
 
 from .site import (
     IProcedureSite,
+    IProcedureSiteFactory,
     IProcedureSiteConfiguration,
 )

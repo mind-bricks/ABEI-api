@@ -1,12 +1,9 @@
 from base64 import urlsafe_b64encode
 from uuid import uuid1
 
-from mbcom.interfaces import (
-    service_entry as _
-)
 from .procedure_basic import (
-    IProcedureFactory,
     ProcedureBasic,
+    ProcedureFactoryBuiltin,
 )
 from .joint_basic import (
     joint_validate,
@@ -53,15 +50,11 @@ class ProcedureComposite(ProcedureBasic):
         ]
 
 
-class ProcedureFactoryComposite(IProcedureFactory):
-
-    def __init__(self, service_site, **kwargs):
-        self.factory = service_site.query_service(
-            _(IProcedureFactory, kwargs.get('inner', '')))
+class ProcedureFactoryComposite(ProcedureFactoryBuiltin):
 
     def create(self, template_name, *args, **kwargs):
-        if template_name == 'composite':
-            return ProcedureComposite(*args, **kwargs)
-
-        return self.factory and self.factory.create(
-            template_name, *args, **kwargs)
+        return (
+            template_name == 'composite' and
+            ProcedureComposite(*args, **kwargs) or
+            super().create(template_name, *args, **kwargs)
+        )

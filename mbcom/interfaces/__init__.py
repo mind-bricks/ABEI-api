@@ -7,6 +7,7 @@ __all__ = [
     'IProcedureJoint',
     'IProcedureJointFactory',
     'IProcedureSite',
+    'IProcedureSiteFactory',
     'IProcedureSiteConfiguration',
     'IService',
     'IServiceSiteConfiguration',
@@ -32,6 +33,7 @@ from .procedure import (
     IProcedureJoint,
     IProcedureJointFactory,
     IProcedureSite,
+    IProcedureSiteFactory,
     IProcedureSiteConfiguration,
 )
 from .storage import IStorage

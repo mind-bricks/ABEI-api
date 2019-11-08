@@ -25,6 +25,25 @@ class IProcedureSite(IService):
         register procedure
         """
 
+    @abstractmethod
+    def get_dependencies(self):
+        """
+        get dependent procedure sites
+        :return:
+        """
+
+
+class IProcedureSiteFactory(IService):
+
+    @abstractmethod
+    def create(self, procedure_sites, **kwargs):
+        """
+        create new procedure site which depends on procedure_sites
+        :param procedure_sites:
+        :param kwargs:
+        :return:
+        """
+
 
 class IProcedureSiteConfiguration(IService):
 
