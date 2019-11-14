@@ -1,3 +1,6 @@
+from base64 import urlsafe_b64encode
+from uuid import uuid1
+
 from mbcom.interfaces import (
     IProcedure,
     IProcedureData,
@@ -6,6 +9,10 @@ from mbcom.interfaces import (
 
 from .data_basic import (
     ProcedureDataBool,
+)
+from .joint_basic import (
+    joint_validate,
+    joint_run,
 )
 
 
@@ -57,6 +64,46 @@ class ProcedureBasic(IProcedure):
         return [None] * len(self.output_signatures)
 
 
+class ProcedureComposite(ProcedureBasic):
+    name = 'composite@py'
+    output_joints = []
+    output_indices = []
+
+    def __init__(
+            self,
+            signature=None,
+            docstring=None,
+            input_signatures=None,
+            output_signatures=None,
+    ):
+        self.signature = signature or urlsafe_b64encode(
+            uuid1().bytes).strip(b'=').decode('utf8')
+        self.docstring = docstring or self.docstring
+        self.input_signatures = input_signatures or self.input_signatures
+        self.output_signatures = output_signatures or self.output_signatures
+
+    def get_joints(self):
+        return [(f, i) for f, i in zip(
+            self.output_joints, self.output_indices)]
+
+    def set_joints(self, output_joints, output_indices):
+        joint_validate(
+            output_joints,
+            output_indices,
+            self,
+            self.output_signatures,
+        )
+        self.output_joints = output_joints
+        self.output_indices = output_indices
+
+    def run_directly(self, procedure_data_list, **kwargs):
+        return [
+            joint_run(joint, procedure_data_list, **kwargs)[i] if
+            joint else procedure_data_list[i]
+            for joint, i in self.get_joints()
+        ]
+
+
 class ProcedureBuiltin(ProcedureBasic):
     name = 'builtin_op@py'
 
@@ -68,7 +115,7 @@ class ProcedureUnaryOperator(ProcedureBuiltin):
     name = 'unary_op@py'
     native_function = (lambda x: x)
 
-    def __init__(self, data_signature):
+    def __init__(self, data_signature=''):
         super().__init__(data_signature)
         self.input_signatures = [data_signature]
         self.output_signatures = [data_signature]
@@ -84,7 +131,7 @@ class ProcedureBinaryOperator(ProcedureBuiltin):
     name = 'binary_op@py'
     native_function = (lambda x, y: x)
 
-    def __init__(self, data_signature):
+    def __init__(self, data_signature=''):
         super().__init__(data_signature)
         self.input_signatures = [data_signature, data_signature]
         self.output_signatures = [data_signature]
@@ -102,7 +149,7 @@ class ProcedureComparator(ProcedureBuiltin):
     name = 'compare@py'
     native_function = (lambda x, y: True)
 
-    def __init__(self, data_signature):
+    def __init__(self, data_signature=''):
         super().__init__(data_signature)
         self.input_signatures = [data_signature, data_signature]
         self.output_signatures = [data_signature]
@@ -119,7 +166,7 @@ class ProcedureComparator(ProcedureBuiltin):
 class ProcedureBranch(ProcedureBuiltin):
     name = 'branch@py'
 
-    def __init__(self, data_signature):
+    def __init__(self, data_signature=''):
         super().__init__(data_signature)
         self.data_signature = data_signature
         self.input_signatures = ['bool@py', data_signature]
@@ -134,7 +181,7 @@ class ProcedureBranch(ProcedureBuiltin):
 class ProcedureRouter2(ProcedureBuiltin):
     name = 'router2@py'
 
-    def __init__(self, data_signature):
+    def __init__(self, data_signature=''):
         super().__init__(data_signature)
         self.input_signatures = [
             'int@py',
@@ -157,7 +204,7 @@ class ProcedureRouter2(ProcedureBuiltin):
 class ProcedureRouter4(ProcedureBuiltin):
     name = 'router4@py'
 
-    def __init__(self, data_signature):
+    def __init__(self, data_signature=''):
         super().__init__(data_signature)
         self.input_signatures = [
             'int@py',
@@ -271,10 +318,11 @@ class ProcedureGreaterThanEqual(ProcedureComparator):
     native_function = (lambda x, y: x >= y)
 
 
-class ProcedureFactoryBuiltin(IProcedureFactory):
+class ProcedureFactoryBasic(IProcedureFactory):
 
     def __init__(self, service_site, **kwargs):
         self.procedure_classes = {p.name: p for p in [
+            ProcedureComposite,
             ProcedureNot,
             ProcedureNegate,
             ProcedureSquare,
@@ -298,6 +346,13 @@ class ProcedureFactoryBuiltin(IProcedureFactory):
             ProcedureRouter4,
         ]}
 
-    def create(self, template_name, *args, **kwargs):
-        procedure_class = self.procedure_classes.get(template_name)
-        return procedure_class and procedure_class(*args, **kwargs)
+    def create(self, signature, **kwargs):
+        procedure_class = self.procedure_classes.get(signature)
+        return procedure_class and procedure_class(**kwargs)
+
+    def register_class(self, signature, procedure_class, **kwargs):
+        assert signature not in self.procedure_classes
+        self.procedure_classes[signature] = procedure_class
+
+    def iterate_classes(self):
+        return self.procedure_classes.keys()

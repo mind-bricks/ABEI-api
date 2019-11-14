@@ -59,7 +59,7 @@ class ProcedureDataString(ProcedureDataBasic):
     value = ''
 
 
-class ProcedureDataFactoryBuiltin(IProcedureDataFactory):
+class ProcedureDataFactoryBasic(IProcedureDataFactory):
     def __init__(self, service_site, **kwargs):
         self.data_classes = dict([
             (ProcedureDataBool.signature, ProcedureDataBool),
@@ -68,6 +68,13 @@ class ProcedureDataFactoryBuiltin(IProcedureDataFactory):
             (ProcedureDataString.signature, ProcedureDataString),
         ])
 
-    def create(self, signature, *args, **kwargs):
+    def create(self, signature, **kwargs):
         data_class = self.data_classes.get(signature)
-        return data_class and data_class(*args, **kwargs)
+        return data_class and data_class(**kwargs)
+
+    def register_class(self, signature, procedure_data_class, **kwargs):
+        assert signature not in self.data_classes
+        self.data_classes[signature] = procedure_data_class
+
+    def iterate_classes(self):
+        return self.data_classes.keys()

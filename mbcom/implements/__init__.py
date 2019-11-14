@@ -1,9 +1,9 @@
 __all__ = [
-    'ServiceSiteConfiguration',
+    'ServiceBuilder',
     'ServiceSite',
 ]
 
-from .service_site import (
-    ServiceSiteConfiguration,
+from .service import (
+    ServiceBuilder,
     ServiceSite,
 )

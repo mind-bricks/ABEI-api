@@ -8,9 +8,9 @@ __all__ = [
     'IProcedureJointFactory',
     'IProcedureSite',
     'IProcedureSiteFactory',
-    'IProcedureSiteConfiguration',
+    'IProcedureBuilder',
     'IService',
-    'IServiceSiteConfiguration',
+    'IServiceBuilder',
     'IServiceSite',
     'IStorage',
     'ServiceEntry',
@@ -20,7 +20,7 @@ __all__ = [
 from .cache import ICache
 from .service import (
     IService,
-    IServiceSiteConfiguration,
+    IServiceBuilder,
     IServiceSite,
     ServiceEntry,
     service_entry,
@@ -34,6 +34,6 @@ from .procedure import (
     IProcedureJointFactory,
     IProcedureSite,
     IProcedureSiteFactory,
-    IProcedureSiteConfiguration,
+    IProcedureBuilder,
 )
 from .storage import IStorage

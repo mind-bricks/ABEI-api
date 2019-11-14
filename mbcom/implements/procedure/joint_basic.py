@@ -1,3 +1,6 @@
+from base64 import urlsafe_b64encode
+from uuid import uuid1
+
 from mbcom.interfaces import (
     IProcedureJoint,
     IProcedureJointFactory,
@@ -50,7 +53,11 @@ class ProcedureJointBasic(IProcedureJoint):
             inner_procedure=None,
             outer_procedure=None,
     ):
-        self.signature = signature
+        assert inner_procedure is not outer_procedure
+        # outer procedure should be a composite procedure
+        outer_procedure.get_joints()
+        self.signature = signature or urlsafe_b64encode(
+            uuid1().bytes).strip(b'=').decode('utf8')
         self.inner_procedure = inner_procedure
         self.outer_procedure = outer_procedure
         self.input_indices = []
@@ -92,5 +99,12 @@ class ProcedureJointBasic(IProcedureJoint):
 
 class ProcedureJointFactory(IProcedureJointFactory):
 
-    def create(self, procedure, **kwargs):
-        return ProcedureJointBasic(inner_procedure=procedure, **kwargs)
+    def __init__(self, service_site, **kwargs):
+        pass
+
+    def create(self, inner_procedure, outer_procedure, **kwargs):
+        return ProcedureJointBasic(
+            inner_procedure=inner_procedure,
+            outer_procedure=outer_procedure,
+            **kwargs
+        )

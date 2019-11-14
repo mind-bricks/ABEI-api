@@ -7,14 +7,14 @@ from .procedure import (
 class IProcedureSite(IService):
 
     @abstractmethod
-    def get_procedure(self, signature):
+    def get_procedure(self, signature, **kwargs):
         """
         get procedure instance by signature
         raise exception if no service found
         """
 
     @abstractmethod
-    def query_procedure(self, signature):
+    def query_procedure(self, signature, **kwargs):
         """
         query procedure instance by signature
         """
@@ -26,7 +26,13 @@ class IProcedureSite(IService):
         """
 
     @abstractmethod
-    def get_dependencies(self):
+    def iterate_procedures(self):
+        """
+        iterate procedures
+        """
+
+    @abstractmethod
+    def get_base_sites(self):
         """
         get dependent procedure sites
         :return:
@@ -41,40 +47,5 @@ class IProcedureSiteFactory(IService):
         create new procedure site which depends on procedure_sites
         :param procedure_sites:
         :param kwargs:
-        :return:
-        """
-
-
-class IProcedureSiteConfiguration(IService):
-
-    @abstractmethod
-    def load_json(self, procedure_site, file_or_filename):
-        """
-        :param procedure_site:
-        :param file_or_filename:
-        :return:
-        """
-
-    @abstractmethod
-    def save_json(self, procedure_site, file_or_filename):
-        """
-        :param procedure_site:
-        :param file_or_filename:
-        :return:
-        """
-
-    @abstractmethod
-    def load_yaml(self, procedure_site, file_or_filename):
-        """
-        :param procedure_site:
-        :param file_or_filename:
-        :return:
-        """
-
-    @abstractmethod
-    def save_yaml(self, procedure_site, file_or_filename):
-        """
-        :param procedure_site:
-        :param file_or_filename:
         :return:
         """

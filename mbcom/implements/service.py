@@ -2,7 +2,7 @@ from importlib import import_module
 
 from mbcom.interfaces import (
     IServiceSite,
-    IServiceSiteConfiguration,
+    IServiceBuilder,
     ServiceEntry,
 )
 from .service_basic import ServiceBasic
@@ -67,7 +67,7 @@ class ServiceSite(IServiceSite):
         return service
 
 
-class ServiceSiteConfiguration(ServiceBasic, IServiceSiteConfiguration):
+class ServiceBuilder(ServiceBasic, IServiceBuilder):
 
     @classmethod
     def get_dependencies(cls):

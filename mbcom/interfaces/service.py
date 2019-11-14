@@ -47,7 +47,7 @@ class IServiceSite(IService):
         """
 
 
-class IServiceSiteConfiguration(IService):
+class IServiceBuilder(IService):
 
     @abstractmethod
     def load_json(self, service_site, file_or_filename):

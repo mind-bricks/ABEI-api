@@ -45,11 +45,25 @@ class IProcedureData(IService):
 class IProcedureDataFactory(IService):
 
     @abstractmethod
-    def create(self, signature, *args, **kwargs):
+    def create(self, signature, **kwargs):
         """
         create data
         :param signature:
-        :param args:
         :param kwargs:
+        :return:
+        """
+
+    @abstractmethod
+    def register_class(self, signature, procedure_data_class, **kwargs):
+        """
+        :param signature:
+        :param procedure_data_class:
+        :param kwargs:
+        :return:
+        """
+
+    @abstractmethod
+    def iterate_classes(self):
+        """
         :return:
         """

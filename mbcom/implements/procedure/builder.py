@@ -1,8 +1,7 @@
 from mbcom.interfaces import (
     IProcedureFactory,
     IProcedureJointFactory,
-    IProcedureSite,
-    IProcedureSiteConfiguration,
+    IProcedureBuilder,
     service_entry as _
 )
 
@@ -12,47 +11,19 @@ from ..util import (
     LazyProperty,
 )
 
-from .site_basic import (
-    ProcedureSiteBasic,
-    ProcedureSiteFactoryBasic,
-)
 
-
-class ProcedureSiteComposite(ProcedureSiteBasic):
-    def __init__(self, procedure_sites=None):
-        super().__init__()
-        self.procedure_sites = procedure_sites or []
-
-    def query_procedure(self, signature):
-        for s in self.procedure_sites:
-            procedure = s.query_procedure(signature)
-            if procedure:
-                return procedure
-        return super().query_procedure(signature)
-
-    def get_dependencies(self):
-        return self.procedure_sites
-
-
-class ProcedureSiteFactoryComposite(ProcedureSiteFactoryBasic):
-    @LazyProperty
-    def builtin_site(self):
-        return self.create_builtin_site()
-
-    def create(self, procedure_sites, **kwargs):
-        assert isinstance(procedure_sites, (list, tuple))
-        for p in procedure_sites:
-            assert isinstance(p, IProcedureSite)
-        return ProcedureSiteComposite(procedure_sites or [self.builtin_site])
-
-
-class ProcedureSiteConfiguration(ServiceBasic, IProcedureSiteConfiguration):
+class ProcedureBuilder(ServiceBasic, IProcedureBuilder):
 
     def __init__(self, service_site, **kwargs):
-        self.procedure_factory = \
-            service_site.get_service(_(IProcedureFactory))
-        self.procedure_joint_factory = \
-            service_site.get_service(_(IProcedureJointFactory))
+        self.service_site = service_site
+
+    @LazyProperty
+    def procedure_factory(self):
+        return self.service_site.get_service(_(IProcedureFactory))
+
+    @LazyProperty
+    def procedure_joint_factory(self):
+        return self.service_site.get_service(_(IProcedureJointFactory))
 
     @classmethod
     def get_dependencies(cls):
@@ -78,7 +49,7 @@ class ProcedureSiteConfiguration(ServiceBasic, IProcedureSiteConfiguration):
         output_signatures = [str(sig) for sig in output_signatures]
 
         procedure = self.procedure_factory.create(
-            'composite',
+            'composite@py',
             signature=str(procedure_object.get('signature', '')),
             docstring=str(procedure_object.get('docstring', '')),
             input_signatures=input_signatures,
@@ -123,8 +94,8 @@ class ProcedureSiteConfiguration(ServiceBasic, IProcedureSiteConfiguration):
                 joint_object.get('procedure'))
             joint = self.procedure_joint_factory.create(
                 joint_procedure,
+                procedure,
                 signature=joint_signature,
-                outer_procedure=procedure,
             )
             joint_object['instance'] = joint
 

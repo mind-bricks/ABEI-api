@@ -47,9 +47,10 @@ class IProcedureJoint(IService):
 class IProcedureJointFactory(IService):
 
     @abstractmethod
-    def create(self, procedure, **kwargs):
+    def create(self, inner_procedure, outer_procedure, **kwargs):
         """
-        :param procedure:
+        :param inner_procedure:
+        :param outer_procedure:
         :param kwargs:
         :return:
         """

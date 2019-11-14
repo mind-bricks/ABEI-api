@@ -70,11 +70,27 @@ class IProcedure(IService):
 class IProcedureFactory(IService):
 
     @abstractmethod
-    def create(self, template_name, *args, **kwargs):
+    def create(self, signature, **kwargs):
         """
         create procedure
-        :param template_name:
-        :param args:
+        :param signature:
         :param kwargs:
+        :return:
+        """
+
+    @abstractmethod
+    def register_class(self, signature, procedure_class, **kwargs):
+        """
+        register procedure class
+        :param signature:
+        :param procedure_class:
+        :param kwargs:
+        :return:
+        """
+
+    @abstractmethod
+    def iterate_classes(self):
+        """
+        iterate procedure classes
         :return:
         """
