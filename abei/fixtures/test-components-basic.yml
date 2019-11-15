@@ -1,0 +1,24 @@
+- entries:
+    - interface: abei.interfaces.IProcedureBuilder
+      name:
+  class: abei.implements.procedure.ProcedureBuilder
+
+- entries:
+    - interface: abei.interfaces.IProcedureFactory
+      name:
+  class: abei.implements.procedure.ProcedureFactory
+
+- entries:
+    - interface: abei.interfaces.IProcedureJointFactory
+      name:
+  class: abei.implements.procedure.ProcedureJointFactory
+
+- entries:
+    - interface: abei.interfaces.IProcedureDataFactory
+      name:
+  class: abei.implements.procedure.ProcedureDataFactory
+
+- entries:
+    - interface: abei.interfaces.IProcedureSiteFactory
+      name:
+  class: abei.implements.procedure.ProcedureSiteFactory

@@ -13,17 +13,32 @@ class IProcedureJoint(IService):
         """
 
     @abstractmethod
-    def get_breakpoint(self):
+    def has_breakpoint(self):
         """
         get if breakpoint is set
         :return:
         """
 
     @abstractmethod
-    def set_breakpoint(self, is_breakpoint):
+    def has_cache(self):
         """
-        set breakpoint or not
-        :param is_breakpoint:
+        get if cache is used
+        :return:
+        """
+
+    @abstractmethod
+    def set_has_breakpoint(self, has_breakpoint):
+        """
+        set whether has breakpoint or not
+        :param has_breakpoint:
+        :return:
+        """
+
+    @abstractmethod
+    def set_has_cache(self, has_cache):
+        """
+        set whether use cache or not
+        :param has_cache:
         :return:
         """
 

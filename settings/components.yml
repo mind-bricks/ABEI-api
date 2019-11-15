@@ -1,11 +1,11 @@
 - entries:
-    - interface: mbcom.interfaces.IStorage
+    - interface: abei.interfaces.IStorage
       name: yml
-    - interface: mbcom.interfaces.IStorage
+    - interface: abei.interfaces.IStorage
       name:
-  class: mbcom.implements.storage_yml_file.Storage
+  class: abei.implements.storage_yml_file.Storage
 
 - entries:
-    - interface: mbcom.interfaces.IService
+    - interface: abei.interfaces.IService
       name: redis
-  class: mbcom.implements.service_redis.Service
+  class: abei.implements.service_redis.Service

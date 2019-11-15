@@ -1,7 +1,7 @@
 from base64 import urlsafe_b64encode
 from uuid import uuid1
 
-from mbcom.interfaces import (
+from abei.interfaces import (
     IProcedureJoint,
     IProcedureJointFactory,
 )
@@ -36,16 +36,37 @@ def joint_validate(joints, indices, procedure, signatures):
 
 def joint_run(joint, procedure_data_list, **kwargs):
     assert isinstance(joint, ProcedureJointBasic)
+    input_joints = joint.get_joints()
+
+    procedure_cache = (
+        kwargs.setdefault('procedure_cache', {}) if
+        joint.use_cache else None
+    )
+    # try to get output from cache
+    if isinstance(procedure_cache, dict):
+        output_data_list = procedure_cache.get(joint.signature)
+        if isinstance(output_data_list, (list, tuple)):
+            return output_data_list
+
     input_data_list = [
         joint_run(joint, procedure_data_list, **kwargs)[i] if
         joint else procedure_data_list[i]
-        for joint, i in joint.get_joints()
+        for joint, i in input_joints
     ]
-    return joint.inner_procedure.run(input_data_list, **kwargs)
+
+    output_data_list = joint.inner_procedure.run(
+        input_data_list, **kwargs)
+
+    # try to save output to cache
+    if isinstance(procedure_cache, dict):
+        procedure_cache[joint.signature] = output_data_list
+
+    return output_data_list
 
 
 class ProcedureJointBasic(IProcedureJoint):
-    has_breakpoint = False
+    use_breakpoint = False
+    use_cache = False
 
     def __init__(
             self,
@@ -72,11 +93,17 @@ class ProcedureJointBasic(IProcedureJoint):
     def get_outer_procedure(self):
         return self.outer_procedure
 
-    def get_breakpoint(self):
-        return self.has_breakpoint
+    def has_breakpoint(self):
+        return self.use_breakpoint
 
-    def set_breakpoint(self, is_breakpoint):
-        self.has_breakpoint = is_breakpoint
+    def has_cache(self):
+        return self.use_cache
+
+    def set_has_breakpoint(self, has_breakpoint):
+        self.use_breakpoint = has_breakpoint
+
+    def set_has_cache(self, has_cache):
+        self.use_cache = has_cache
 
     def get_joints(self):
         return [(f, i) for f, i in zip(

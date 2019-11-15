@@ -1,6 +1,6 @@
 from importlib import import_module
 
-from mbcom.interfaces import (
+from abei.interfaces import (
     IServiceSite,
     IServiceBuilder,
     ServiceEntry,

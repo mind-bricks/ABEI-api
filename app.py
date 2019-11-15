@@ -2,7 +2,7 @@
 import os
 
 from flask import Flask
-from mbcom.implements import (
+from abei.implements import (
     ServiceSite,
     ServiceBuilder,
 )

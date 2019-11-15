@@ -1,6 +1,6 @@
 from redis import WatchError
 
-from mbcom.interfaces import (
+from abei.interfaces import (
     ICache,
     IService,
     service_entry as _

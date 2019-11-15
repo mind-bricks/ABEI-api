@@ -3,7 +3,7 @@ from argparse import (
     SUPPRESS,
 )
 
-from mbcom.interfaces import IStorage
+from abei.interfaces import IStorage
 
 
 class Storage(IStorage):

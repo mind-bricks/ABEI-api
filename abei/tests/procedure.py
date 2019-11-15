@@ -1,7 +1,8 @@
 import os
+import unittest
 
-from mbcom.interfaces import (
-    # IProcedureBuilder,
+from abei.interfaces import (
+    IProcedureBuilder,
     IProcedure,
     IProcedureFactory,
     IProcedureDataFactory,
@@ -11,7 +12,7 @@ from mbcom.interfaces import (
     IProcedureSiteFactory,
     service_entry as _
 )
-from mbcom.implements.procedure import (
+from abei.implements.procedure import (
     ProcedureBasic,
     ProcedureDataBasic,
 )
@@ -21,12 +22,7 @@ from .basic import TestCaseBasic
 
 class TestProcedure(TestCaseBasic):
     service_config_files = [
-        os.path.join(
-            os.path.dirname(__file__),
-            os.pardir,
-            'fixtures',
-            'test-components-basic.yml'
-        ),
+        'test-components-basic.yml',
     ]
 
     def test_procedure_factory(self):
@@ -96,3 +92,13 @@ class TestProcedure(TestCaseBasic):
         procedure_3 = instance.query_procedure('int@py:add@py', depth=0)
         self.assertNotEqual(len(procedures), 0)
         self.assertIs(procedure_1, procedure_3)
+
+    @unittest.skip('not finished')
+    def test_procedure_builder(self):
+        builder = self.service_site.get_service(_(IProcedureBuilder))
+        service = self.service_site.get_service(_(IProcedureSiteFactory))
+        site = service.create(None)
+        builder.load_yaml(site, os.path.join(
+            self.service_config_dir,
+            'test-procedures-1.yml'
+        ))

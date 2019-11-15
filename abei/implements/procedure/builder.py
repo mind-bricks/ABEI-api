@@ -1,4 +1,4 @@
-from mbcom.interfaces import (
+from abei.interfaces import (
     IProcedureFactory,
     IProcedureJointFactory,
     IProcedureBuilder,
