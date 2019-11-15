@@ -1,6 +1,7 @@
 __all__ = [
     'IProcedure',
     'IProcedureFactory',
+    'IProcedureDetail',
 
     'IProcedureData',
     'IProcedureDataFactory',
@@ -25,6 +26,7 @@ from .data import (
 )
 
 from .joint import (
+    IProcedureDetail,
     IProcedureJoint,
     IProcedureJointFactory,
 )

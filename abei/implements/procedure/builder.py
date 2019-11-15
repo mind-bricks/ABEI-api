@@ -1,8 +1,10 @@
 from abei.interfaces import (
+    IProcedure,
+    IProcedureDetail,
     IProcedureFactory,
     IProcedureJointFactory,
     IProcedureBuilder,
-    service_entry as _
+    service_entry as _,
 )
 
 from ..service_basic import ServiceBasic
@@ -55,6 +57,10 @@ class ProcedureBuilder(ServiceBasic, IProcedureBuilder):
             input_signatures=input_signatures,
             output_signatures=output_signatures,
         )
+        assert (
+            isinstance(procedure, IProcedure) and
+            isinstance(procedure, IProcedureDetail)
+        )
 
         procedure_joints = procedure_object.get('joints', {})
         self.load_joints(
@@ -63,7 +69,7 @@ class ProcedureBuilder(ServiceBasic, IProcedureBuilder):
             procedure_joints,
         )
 
-        procedure_output_joints = procedure_object.get('output_joints', [])
+        procedure_output_joints = procedure_object.get('outputs', [])
         if not isinstance(procedure_output_joints, list):
             raise ValueError('invalid procedure joints')
 
@@ -101,7 +107,7 @@ class ProcedureBuilder(ServiceBasic, IProcedureBuilder):
 
         # connect joints
         for joint_signature, joint_object in joint_objects.items():
-            input_joint_objects = joint_object.get('input_joints', [])
+            input_joint_objects = joint_object.get('inputs', [])
             if not isinstance(input_joint_objects, list):
                 raise ValueError('invalid procedure joint config')
 

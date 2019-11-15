@@ -1,5 +1,4 @@
 import os
-import unittest
 
 from abei.interfaces import (
     IProcedureBuilder,
@@ -93,12 +92,52 @@ class TestProcedure(TestCaseBasic):
         self.assertNotEqual(len(procedures), 0)
         self.assertIs(procedure_1, procedure_3)
 
-    @unittest.skip('not finished')
     def test_procedure_builder(self):
         builder = self.service_site.get_service(_(IProcedureBuilder))
-        service = self.service_site.get_service(_(IProcedureSiteFactory))
-        site = service.create(None)
+        site_factory = self.service_site.get_service(_(IProcedureSiteFactory))
+        data_factory = self.service_site.get_service(_(IProcedureDataFactory))
+        site = site_factory.create(None)
         builder.load_yaml(site, os.path.join(
             self.service_config_dir,
             'test-procedures-1.yml'
         ))
+        procedure = site.get_procedure('test-procedure-1.1')
+        self.assertIsNotNone(procedure)
+        self.assertEqual(
+            procedure.get_docstring(),
+            'this is test procedure 1.1'
+        )
+        input_1 = data_factory.create('int@py')
+        input_2 = data_factory.create('int@py')
+        input_1.set_value(1)
+        input_2.set_value(2)
+        outputs = procedure.run([input_1, input_2])
+        self.assertEqual(len(outputs), 2)
+        self.assertTrue(all(outputs))
+        self.assertEqual(outputs[0].get_value(), 3)
+        self.assertEqual(outputs[1].get_value(), -1)
+
+        procedure = site.get_procedure('test-procedure-1.2')
+        self.assertIsNotNone(procedure)
+        self.assertEqual(
+            procedure.get_docstring(),
+            'this is test procedure 1.2'
+        )
+        input_1 = data_factory.create('int@py')
+        input_2 = data_factory.create('int@py')
+        input_1.set_value(1)
+        input_2.set_value(2)
+        self.assertRaises(
+            AssertionError,
+            lambda: procedure.run([input_1, input_2])
+        )
+
+        input_1 = data_factory.create('float@py')
+        input_2 = data_factory.create('float@py')
+        input_1.set_value(2.0)
+        input_2.set_value(3.0)
+        outputs = procedure.run([input_1, input_2])
+        self.assertEqual(len(outputs), 2)
+        self.assertTrue(all(outputs))
+        self.assertEqual(outputs[0].get_value(), 30)
+        self.assertEqual(outputs[1].get_value(), 11)

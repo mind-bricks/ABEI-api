@@ -43,22 +43,6 @@ class IProcedure(IService):
         """
 
     @abstractmethod
-    def get_joints(self):
-        """
-        get procedure flow joints
-        :return: list of procedure flow and index pair
-        """
-
-    @abstractmethod
-    def set_joints(self, output_joints, output_indices):
-        """
-        set procedure flow joints
-        :param output_joints:
-        :param output_indices:
-        :return:
-        """
-
-    @abstractmethod
     def run(self, procedure_data_list, **kwargs):
         """
         :param procedure_data_list: input code data list
@@ -70,19 +54,19 @@ class IProcedure(IService):
 class IProcedureFactory(IService):
 
     @abstractmethod
-    def create(self, signature, **kwargs):
+    def create(self, class_name, **kwargs):
         """
         create procedure
-        :param signature:
+        :param class_name:
         :param kwargs:
         :return:
         """
 
     @abstractmethod
-    def register_class(self, signature, procedure_class, **kwargs):
+    def register_class(self, class_name, procedure_class, **kwargs):
         """
         register procedure class
-        :param signature:
+        :param class_name:
         :param procedure_class:
         :param kwargs:
         :return:

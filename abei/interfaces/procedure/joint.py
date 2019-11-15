@@ -4,7 +4,25 @@ from .procedure import (
 )
 
 
-class IProcedureJoint(IService):
+class IProcedureDetail(IService):
+    @abstractmethod
+    def get_joints(self):
+        """
+        get procedure flow joints
+        :return: list of procedure flow and index pair
+        """
+
+    @abstractmethod
+    def set_joints(self, joints, indices):
+        """
+        set procedure joints
+        :param joints:
+        :param indices:
+        :return:
+        """
+
+
+class IProcedureJoint(IProcedureDetail):
     @abstractmethod
     def get_signature(self):
         """
@@ -20,14 +38,7 @@ class IProcedureJoint(IService):
         """
 
     @abstractmethod
-    def has_cache(self):
-        """
-        get if cache is used
-        :return:
-        """
-
-    @abstractmethod
-    def set_has_breakpoint(self, has_breakpoint):
+    def enable_breakpoint(self, has_breakpoint):
         """
         set whether has breakpoint or not
         :param has_breakpoint:
@@ -35,26 +46,17 @@ class IProcedureJoint(IService):
         """
 
     @abstractmethod
-    def set_has_cache(self, has_cache):
+    def has_cache(self):
         """
-        set whether use cache or not
-        :param has_cache:
+        get if cache is used
         :return:
         """
 
     @abstractmethod
-    def get_joints(self):
+    def enable_cache(self, has_cache):
         """
-        get dependent joints
-        :return: list of procedure flow and index pair
-        """
-
-    @abstractmethod
-    def set_joints(self, input_joints, input_indices):
-        """
-        set dependent joints
-        :param input_joints:
-        :param input_indices:
+        set whether use cache or not
+        :param has_cache:
         :return:
         """
 

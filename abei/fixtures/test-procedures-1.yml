@@ -1,0 +1,71 @@
+- signature: 'test-procedure-1.1'
+  input_signatures:
+    - int@py
+    - int@py
+  output_signatures:
+    - int@py
+    - int@py
+  docstring: 'this is test procedure 1.1'
+  joints:
+    joint-1:
+      procedure: int@py:add@py
+      inputs:
+        - - null
+          - 0
+        - - null
+          - 1
+    joint-2:
+      procedure: int@py:sub@py
+      inputs:
+        - - null
+          - 0
+        - - null
+          - 1
+  outputs:
+    - - joint-1
+      - 0
+    - - joint-2
+      - 0
+
+- signature: 'test-procedure-1.2'
+  input_signatures:
+    - float@py
+    - float@py
+  output_signatures:
+    - float@py
+    - float@py
+  docstring: 'this is test procedure 1.2'
+  joints:
+    joint-1:
+      procedure: float@py:add@py
+      inputs:
+        - - null
+          - 0
+        - - null
+          - 1
+    joint-2:
+      procedure: float@py:mul@py
+      inputs:
+        - - null
+          - 0
+        - - null
+          - 1
+    joint-3:
+      procedure: float@py:mul@py
+      inputs:
+        - - joint-1
+          - 0
+        - - joint-2
+          - 0
+    joint-4:
+      procedure: float@py:add@py
+      inputs:
+        - - joint-1
+          - 0
+        - - joint-2
+          - 0
+  outputs:
+    - - joint-3
+      - 0
+    - - joint-4
+      - 0

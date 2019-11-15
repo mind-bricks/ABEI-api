@@ -5,6 +5,7 @@ from abei.interfaces import (
     IProcedure,
     IProcedureData,
     IProcedureFactory,
+    IProcedureDetail,
 )
 
 from .data_basic import (
@@ -31,12 +32,6 @@ class ProcedureBasic(IProcedure):
 
     def get_output_signatures(self):
         return self.output_signatures
-
-    def get_joints(self):
-        raise AssertionError('not supported')
-
-    def set_joints(self, output_joints, output_indices):
-        raise AssertionError('not supported')
 
     def get_docstring(self):
         return self.docstring
@@ -65,10 +60,10 @@ class ProcedureBasic(IProcedure):
                 continue
             if not isinstance(d, IProcedureData):
                 raise AssertionError('invalid data list')
-            if not d.get_signature() != sig:
+            if d.get_signature() != sig:
                 raise AssertionError('data signature miss match')
 
-        return has_missing_params
+        return not has_missing_params
 
     def run_normally(self, procedure_data_list, **kwargs):
         return [None] * len(self.output_signatures)
@@ -77,7 +72,7 @@ class ProcedureBasic(IProcedure):
         return [None] * len(self.output_signatures)
 
 
-class ProcedureComposite(ProcedureBasic):
+class ProcedureComposite(IProcedureDetail, ProcedureBasic):
     name = 'composite@py'
     output_joints = []
     output_indices = []
@@ -99,15 +94,15 @@ class ProcedureComposite(ProcedureBasic):
         return [(f, i) for f, i in zip(
             self.output_joints, self.output_indices)]
 
-    def set_joints(self, output_joints, output_indices):
+    def set_joints(self, joints, indices):
         joint_validate(
-            output_joints,
-            output_indices,
+            joints,
+            indices,
             self,
             self.output_signatures,
         )
-        self.output_joints = output_joints
-        self.output_indices = output_indices
+        self.output_joints = joints
+        self.output_indices = indices
 
     def run_normally(self, procedure_data_list, **kwargs):
         return [
@@ -126,7 +121,7 @@ class ProcedureBuiltin(ProcedureBasic):
 
 class ProcedureUnaryOperator(ProcedureBuiltin):
     name = 'unary_op@py'
-    native_function = (lambda x: x)
+    native_function = staticmethod(lambda x: x)
 
     def __init__(self, data_signature=ProcedureDataBasic.signature):
         super().__init__(data_signature)
@@ -142,7 +137,7 @@ class ProcedureUnaryOperator(ProcedureBuiltin):
 
 class ProcedureBinaryOperator(ProcedureBuiltin):
     name = 'binary_op@py'
-    native_function = (lambda x, y: x)
+    native_function = staticmethod(lambda x, y: x)
 
     def __init__(self, data_signature=ProcedureDataBasic.signature):
         super().__init__(data_signature)
@@ -160,7 +155,7 @@ class ProcedureBinaryOperator(ProcedureBuiltin):
 
 class ProcedureComparator(ProcedureBuiltin):
     name = 'compare@py'
-    native_function = (lambda x, y: True)
+    native_function = staticmethod(lambda x, y: True)
 
     def __init__(self, data_signature=ProcedureDataBasic.signature):
         super().__init__(data_signature)
@@ -233,92 +228,92 @@ class ProcedureFunnel(ProcedureBuiltin):
 
 class ProcedureNot(ProcedureUnaryOperator):
     name = 'not@py'
-    native_function = (lambda x: not x)
+    native_function = staticmethod(lambda x: not x)
 
 
 class ProcedureNegate(ProcedureUnaryOperator):
     name = 'neg@py'
-    native_function = (lambda x: -x)
+    native_function = staticmethod(lambda x: -x)
 
 
 class ProcedureSquare(ProcedureUnaryOperator):
     name = 'sq@py'
-    native_function = (lambda x: x * x)
+    native_function = staticmethod(lambda x: x * x)
 
 
 class ProcedureAnd(ProcedureBinaryOperator):
     name = 'and@py'
-    native_function = (lambda x, y: x and y)
+    native_function = staticmethod(lambda x, y: x and y)
 
 
 class ProcedureOr(ProcedureBinaryOperator):
     name = 'or@py'
-    native_function = (lambda x, y: x or y)
+    native_function = staticmethod(lambda x, y: x or y)
 
 
 class ProcedureAdd(ProcedureBinaryOperator):
     name = 'add@py'
-    native_function = (lambda x, y: x + y)
+    native_function = staticmethod(lambda x, y: x + y)
 
 
 class ProcedureSubtract(ProcedureBinaryOperator):
     name = 'sub@py'
-    native_function = (lambda x, y: x - y)
+    native_function = staticmethod(lambda x, y: x - y)
 
 
 class ProcedureMultiply(ProcedureBinaryOperator):
     name = 'mul@py'
-    native_function = (lambda x, y: x * y)
+    native_function = staticmethod(lambda x, y: x * y)
 
 
 class ProcedureDivide(ProcedureBinaryOperator):
     name = 'div@py'
-    native_function = (lambda x, y: x / y)
+    native_function = staticmethod(lambda x, y: x / y)
 
 
 class ProcedureModulo(ProcedureBinaryOperator):
     name = 'mod@py'
-    native_function = (lambda x, y: x % y)
+    native_function = staticmethod(lambda x, y: x % y)
 
 
 class ProcedureModDivide(ProcedureBinaryOperator):
     name = 'mod_div@py'
-    native_function = (lambda x, y: x // y)
+    native_function = staticmethod(lambda x, y: x // y)
 
 
 class ProcedurePower(ProcedureBinaryOperator):
     name = 'pow@py'
-    native_function = (lambda x, y: x ** y)
+    native_function = staticmethod(lambda x, y: x ** y)
 
 
 class ProcedureEqual(ProcedureComparator):
     name = 'eq@py'
-    native_function = (lambda x, y: x == y)
+    native_function = staticmethod(lambda x, y: x == y)
 
 
 class ProcedureNotEqual(ProcedureComparator):
     name = 'ne@py'
-    native_function = (lambda x, y: x != y)
+    native_function = staticmethod(lambda x, y: x != y)
 
 
 class ProcedureLessThan(ProcedureComparator):
     name = 'lt@py'
-    native_function = (lambda x, y: x < y)
+    native_function = staticmethod(lambda x, y: x < y)
 
 
 class ProcedureLessThanOrEqual(ProcedureComparator):
     name = 'lte@py'
-    native_function = (lambda x, y: x <= y)
+    native_function = staticmethod(lambda x, y: x <= y)
 
 
 class ProcedureGreaterThan(ProcedureComparator):
     name = 'gt@py'
-    native_function = (lambda x, y: x > y)
+    native_function = staticmethod(lambda x, y: x > y)
 
 
 class ProcedureGreaterThanEqual(ProcedureComparator):
     name = 'gte@py'
-    native_function = (lambda x, y: x >= y)
+    native_function = staticmethod(lambda x, y: x >= y)
 
 
 class ProcedureFactoryBasic(IProcedureFactory):
@@ -349,13 +344,13 @@ class ProcedureFactoryBasic(IProcedureFactory):
             ProcedureFunnel,
         ]}
 
-    def create(self, signature, **kwargs):
-        procedure_class = self.procedure_classes.get(signature)
+    def create(self, class_name, **kwargs):
+        procedure_class = self.procedure_classes.get(class_name)
         return procedure_class and procedure_class(**kwargs)
 
-    def register_class(self, signature, procedure_class, **kwargs):
-        assert signature not in self.procedure_classes
-        self.procedure_classes[signature] = procedure_class
+    def register_class(self, class_name, procedure_class, **kwargs):
+        assert class_name not in self.procedure_classes
+        self.procedure_classes[class_name] = procedure_class
 
     def iterate_classes(self):
         return self.procedure_classes.keys()
