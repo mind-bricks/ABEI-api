@@ -1,4 +1,5 @@
 __all__ = [
+    'abstractmethod',
     'ICache',
     'IProcedure',
     'IProcedureFactory',
@@ -20,6 +21,7 @@ __all__ = [
 
 from .cache import ICache
 from .service import (
+    abstractmethod,
     IService,
     IServiceBuilder,
     IServiceSite,
