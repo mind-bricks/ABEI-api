@@ -29,8 +29,12 @@ ALLOWED_HOSTS = ['*']
 # Application definition
 
 INSTALLED_APPS = [
+    'django.contrib.staticfiles',
     'django_filters',
+    'rest_framework_swagger',
     'rest_framework',
+    'apps.apps.AppConfig4Procedures',
+    # 'apps.apps.AppConfig4Services',
 ]
 
 MIDDLEWARE = [
@@ -40,7 +44,7 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
-ROOT_URLCONF = 'services.urls'
+ROOT_URLCONF = 'apps.urls'
 
 TEMPLATES = [
     {
@@ -94,7 +98,7 @@ STATIC_URL = '/static/'
 
 REST_FRAMEWORK = {
     'UNAUTHENTICATED_USER':
-        'services.authentication.AnonymousUser',
+        'apps.authentication.AnonymousUser',
     'DEFAULT_AUTHENTICATION_CLASSES': (
         'rest_framework.authentication.SessionAuthentication',
     ),

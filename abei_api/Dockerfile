@@ -2,7 +2,7 @@ FROM python:3.6
 
 EXPOSE 80
 
-COPY ./misc /services/misc
+# COPY ./misc /services/misc
 
 COPY ./scripts /services/scripts
 

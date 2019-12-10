@@ -171,59 +171,83 @@ class ProcedureComparator(ProcedureBuiltin):
         return [ret]
 
 
-class ProcedureSwitch(ProcedureBuiltin):
-    name = 'switch@py'
-
-    def __init__(self, data_signature=ProcedureDataBasic.signature):
-        super().__init__(data_signature)
-        self.data_signature = data_signature
-        self.input_signatures = ['bool@py', data_signature]
-        self.output_signatures = [data_signature, data_signature]
-
-    def run_normally(self, procedure_data_list, **kwargs):
-        switch = procedure_data_list[0].get_value()
-        ret = procedure_data_list[1].clone()
-        return switch and [None, ret] or [ret, None]
-
-
-class ProcedureGate(ProcedureBuiltin):
-    name = 'gate@py'
+class ProcedureFilter(ProcedureBuiltin):
+    name = 'filter@py'
 
     def __init__(
             self,
             data_signature=ProcedureDataBasic.signature,
-            output_count=2
+            data_count=1,
     ):
         super().__init__(data_signature)
-        self.input_signatures = ['int@py', data_signature]
-        self.output_signatures = [data_signature] * output_count
+        self.data_signature = data_signature
+        signatures = [data_signature] * data_count
+        self.input_signatures = ['int@py', *signatures]
+        self.output_signatures = signatures
 
     def run_normally(self, procedure_data_list, **kwargs):
-        gate = procedure_data_list[0].get_value()
+        flag = procedure_data_list[0].get_value()
+        assert isinstance(flag, int)
+
+        return [
+            (flag & (1 >> i)) and
+            procedure_data_list[i + 1] or None
+            for i in range(len(self.output_signatures))
+        ]
+
+    def run_exceptionally(self, procedure_data_list, **kwargs):
+        return self.run_normally(procedure_data_list, **kwargs)
+
+
+class ProcedureBranch(ProcedureBuiltin):
+    name = 'branch@py'
+
+    def __init__(
+            self,
+            data_signature=ProcedureDataBasic.signature,
+            data_count=2,
+    ):
+        super().__init__(data_signature)
+        signatures = [data_signature] * data_count
+        self.input_signatures = ['int@py', data_signature]
+        self.output_signatures = signatures
+
+    def run_normally(self, procedure_data_list, **kwargs):
+        flag = procedure_data_list[0].get_value()
         ret = procedure_data_list[1]
         return [
-            (gate & (1 >> i)) and ret.clone() or None
+            (flag & (1 >> i)) and ret or None
             for i in range(len(self.output_signatures))
         ]
 
 
-class ProcedureFunnel(ProcedureBuiltin):
-    name = 'funnel@py'
+class ProcedureSelect(ProcedureBuiltin):
+    name = 'select@py'
 
     def __init__(
             self,
             data_signature=ProcedureDataBasic.signature,
-            input_count=2
+            data_count=2,
     ):
         super().__init__(data_signature)
-        self.input_signatures = [data_signature] * input_count
+        signatures = [data_signature] * data_count
+        self.input_signatures = ['int@py', *signatures]
         self.output_signatures = [data_signature]
 
+    def run_normally(self, procedure_data_list, **kwargs):
+        flag = procedure_data_list[0].get_value()
+        assert isinstance(flag, int)
+
+        import math
+        index = int(math.log2(flag)) + 1
+
+        return [
+            procedure_data_list[index] if
+            index < len(procedure_data_list) else None
+        ]
+
     def run_exceptionally(self, procedure_data_list, **kwargs):
-        return [next((
-            data for data in procedure_data_list if
-            data is not None), None
-        )]
+        return self.run_normally(procedure_data_list, **kwargs)
 
 
 class ProcedureNot(ProcedureUnaryOperator):
@@ -339,9 +363,9 @@ class ProcedureFactoryBasic(IProcedureFactory):
             ProcedureLessThanOrEqual,
             ProcedureGreaterThan,
             ProcedureGreaterThanEqual,
-            ProcedureSwitch,
-            ProcedureGate,
-            ProcedureFunnel,
+            ProcedureFilter,
+            ProcedureBranch,
+            ProcedureSelect,
         ]}
 
     def create(self, class_name, **kwargs):

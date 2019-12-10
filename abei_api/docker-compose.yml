@@ -5,7 +5,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    image: docker.mind-bricks.com/mind-bricks/mb-back-pump
+    image: docker.mind-bricks.com/mind-bricks/abei_api
     restart: on-failure
     ports:
       - "8000:80"

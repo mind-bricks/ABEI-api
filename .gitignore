@@ -121,4 +121,4 @@ nohup.out
 env356
 
 # setting files
-settings/local.py
+abei_api/settings/local.py

@@ -81,7 +81,7 @@ class ProcedureSiteFactoryBasic(IProcedureSiteFactory):
             service.create('lte@py', data_signature='int@py'),
             service.create('gt@py', data_signature='int@py'),
             service.create('gte@py', data_signature='int@py'),
-            service.create('switch@py', data_signature='int@py'),
+            service.create('filter@py', data_signature='int@py'),
 
             service.create('neg@py', data_signature='float@py'),
             service.create('sq@py', data_signature='float@py'),
@@ -98,12 +98,12 @@ class ProcedureSiteFactoryBasic(IProcedureSiteFactory):
             service.create('lte@py', data_signature='float@py'),
             service.create('gt@py', data_signature='float@py'),
             service.create('gte@py', data_signature='float@py'),
-            service.create('switch@py', data_signature='float@py'),
+            service.create('filter@py', data_signature='float@py'),
 
             service.create('add@py', data_signature='string@py'),
             service.create('eq@py', data_signature='string@py'),
             service.create('ne@py', data_signature='string@py'),
-            service.create('switch@py', data_signature='string@py'),
+            service.create('filter@py', data_signature='string@py'),
         ]:
             site.register_procedure(p)
         return site
