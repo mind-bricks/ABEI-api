@@ -33,8 +33,8 @@ INSTALLED_APPS = [
     'django_filters',
     'rest_framework_swagger',
     'rest_framework',
-    'apps.apps.AppConfig4Procedures',
-    # 'apps.apps.AppConfig4Services',
+    'apps.apps.AppConfig4Editors',
+    'apps.apps.AppConfig4Executors',
 ]
 
 MIDDLEWARE = [
@@ -99,8 +99,10 @@ STATIC_URL = '/static/'
 REST_FRAMEWORK = {
     'UNAUTHENTICATED_USER':
         'apps.authentication.AnonymousUser',
+    'DEFAULT_SCHEMA_CLASS':
+        'rest_framework.schemas.AutoSchema',
     'DEFAULT_AUTHENTICATION_CLASSES': (
-        'rest_framework.authentication.SessionAuthentication',
+        # 'rest_framework.authentication.SessionAuthentication',
     ),
     'DEFAULT_PERMISSION_CLASSES': (
         # 'rest_framework.permissions.IsAuthenticated',

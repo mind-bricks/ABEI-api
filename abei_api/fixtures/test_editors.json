@@ -1,0 +1,30 @@
+[
+  {
+    "model": "editors.proceduresite",
+    "pk": 1,
+    "fields": {
+      "signature": "test-site-1",
+      "base_sites": []
+    }
+  },
+  {
+    "model": "editors.proceduresite",
+    "pk": 2,
+    "fields": {
+      "signature": "test-site-2",
+      "base_sites": [
+        1
+      ]
+    }
+  },
+  {
+    "model": "editors.proceduresite",
+    "pk": 3,
+    "fields": {
+      "signature": "test-site-3",
+      "base_sites": [
+        2
+      ]
+    }
+  }
+]

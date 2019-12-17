@@ -6,8 +6,11 @@ from .models import (
     Procedure,
     ProcedureInput,
     ProcedureOutput,
+    ProcedureOutputDetail,
     ProcedureJoint,
     ProcedureJointInput,
+    ProcedureSite,
+    ProcedureSiteRelationship,
 )
 
 
@@ -52,22 +55,53 @@ class ProcedureInputSerializer(serializers.ModelSerializer):
         model = ProcedureInput
         fields = [
             'signature',
+            'index',
+        ]
+
+
+class ProcedureOutputDetailSerializer(serializers.ModelSerializer):
+    output_joint = serializers.SlugRelatedField(
+        slug_field='signature',
+        allow_null=True,
+        read_only=True,
+    )
+
+    class Meta:
+        model = ProcedureOutputDetail
+        fields = [
+            'output_joint',
+            'output_index',
         ]
 
 
 class ProcedureOutputSerializer(serializers.ModelSerializer):
-    output_joint = serializers.SlugRelatedField(
-        slug_field='signature',
-        queryset=ProcedureJoint.objects.all(),
-    )
-
     class Meta:
         model = ProcedureOutput
         fields = [
             'signature',
             'index',
-            'output_joint',
-            'output_index',
+        ]
+
+
+class ProcedureSiteSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ProcedureSite
+        fields = [
+            'signature',
+        ]
+
+
+class ProcedureSiteBaseSitesSerializer(serializers.ModelSerializer):
+    signature = serializers.SlugRelatedField(
+        source='base',
+        slug_field='signature',
+        queryset=ProcedureSite.objects.all(),
+    )
+
+    class Meta:
+        model = ProcedureSiteRelationship
+        fields = [
+            'signature',
         ]
 
 
@@ -82,6 +116,12 @@ class ProcedureSerializer(serializers.ModelSerializer):
         read_only=True,
     )
 
+    site = serializers.SlugRelatedField(
+        slug_field='signature',
+        allow_null=True,
+        queryset=ProcedureSite.objects.all(),
+    )
+
     class Meta:
         model = Procedure
         fields = [
@@ -90,4 +130,5 @@ class ProcedureSerializer(serializers.ModelSerializer):
             'joints',
             'inputs',
             'outputs',
+            'site',
         ]
