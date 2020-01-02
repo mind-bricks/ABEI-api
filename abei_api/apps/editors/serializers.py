@@ -1,4 +1,5 @@
 from rest_framework import (
+    exceptions,
     serializers,
 )
 
@@ -16,7 +17,9 @@ from .models import (
 
 class ProcedureJointInputSerializer(serializers.ModelSerializer):
     input_joint = serializers.SlugRelatedField(
+        required=False,
         allow_null=True,
+        default=None,
         slug_field='signature',
         queryset=ProcedureJoint.objects.all(),
     )
@@ -28,6 +31,19 @@ class ProcedureJointInputSerializer(serializers.ModelSerializer):
             'input_joint',
             'input_index',
         ]
+
+    def save(self, **kwargs):
+        instance = super().save(**kwargs)
+        if (
+                instance.input_joint and
+                instance.joint.outer_procedure !=
+                instance.input_joint.outer_procedure
+        ):
+            raise exceptions.ValidationError(
+                'input of a joint should belong to '
+                'the same procedure of this joint'
+            )
+        return instance
 
 
 class ProcedureJointSerializer(serializers.ModelSerializer):
@@ -48,6 +64,18 @@ class ProcedureJointSerializer(serializers.ModelSerializer):
             'procedure',
             'inputs',
         ]
+
+    def save(self, **kwargs):
+        instance = super().save(**kwargs)
+        base_site = instance.inner_procedure.site
+        base_sites = instance.outer_procedure.site.base_sites
+        if base_site and not base_sites.filter(
+                base_relations__base=base_site
+        ).exists():
+            raise exceptions.ValidationError(
+                'procedure of joint should be in base sites')
+
+        return instance
 
 
 class ProcedureInputSerializer(serializers.ModelSerializer):
@@ -116,9 +144,15 @@ class ProcedureSerializer(serializers.ModelSerializer):
         read_only=True,
     )
 
+    joints = serializers.SlugRelatedField(
+        many=True,
+        read_only=True,
+        slug_field='signature',
+    )
+
     site = serializers.SlugRelatedField(
         slug_field='signature',
-        allow_null=True,
+        # allow_null=True,
         queryset=ProcedureSite.objects.all(),
     )
 

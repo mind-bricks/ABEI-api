@@ -12,6 +12,11 @@ from rest_framework_extensions.mixins import (
     NestedViewSetMixin,
 )
 
+from .filters import (
+    ProcedureSiteFilterSet,
+    ProcedureFilterSet,
+)
+
 from .models import (
     Procedure,
     ProcedureJoint,
@@ -40,6 +45,7 @@ class ProcedureSiteViewSet(
     mixins.ListModelMixin,
     viewsets.GenericViewSet,
 ):
+    filter_class = ProcedureSiteFilterSet
     lookup_field = 'signature'
     queryset = ProcedureSite.objects.all()
     serializer_class = ProcedureSiteSerializer
@@ -47,8 +53,8 @@ class ProcedureSiteViewSet(
     def perform_destroy(self, instance):
         try:
             instance.delete()
-        except ProtectedError:
-            raise exceptions.NotAcceptable()
+        except ProtectedError as e:
+            raise exceptions.NotAcceptable(str(e))
 
 
 class ProcedureSiteBaseSitesViewSet(
@@ -71,16 +77,23 @@ class ProcedureSiteBaseSitesViewSet(
 
         try:
             serializer.save(sub=site)
-        except IntegrityError:
-            raise exceptions.NotAcceptable()
+        except IntegrityError as e:
+            raise exceptions.NotAcceptable(str(e))
 
 
 class ProcedureViewSet(
     viewsets.ModelViewSet,
 ):
+    filter_class = ProcedureFilterSet
     lookup_field = 'signature'
     queryset = Procedure.objects.all()
     serializer_class = ProcedureSerializer
+
+    def perform_destroy(self, instance):
+        try:
+            instance.delete()
+        except ProtectedError as e:
+            raise exceptions.NotAcceptable(str(e))
 
 
 class ProcedureJointViewSet(
@@ -98,7 +111,11 @@ class ProcedureJointViewSet(
         ).first()
         if not outer_procedure:
             raise exceptions.NotFound()
-        serializer.save(outer_procedure=outer_procedure)
+
+        try:
+            serializer.save(outer_procedure=outer_procedure)
+        except IntegrityError as e:
+            raise exceptions.NotAcceptable(str(e))
 
 
 class ProcedureJointInputViewSet(
@@ -110,19 +127,21 @@ class ProcedureJointInputViewSet(
     serializer_class = ProcedureJointInputSerializer
 
     def perform_create(self, serializer):
-        # todo: ???
         input_joint = ProcedureJoint.objects.filter(
             signature=self.kwargs.get(
-                'parent_lookup_input_joint__signature'),
+                'parent_lookup_joint__signature'),
             outer_procedure__signature=self.kwargs.get(
                 'parent_lookup_joint__outer_procedure__signature'),
         ).first()
         if not input_joint:
             raise exceptions.NotFound()
-        serializer.save(input_joint=input_joint)
+
+        try:
+            serializer.save(joint=input_joint)
+        except IntegrityError as e:
+            raise exceptions.NotAcceptable(str(e))
 
     def perform_destroy(self, instance):
-        # todo:
         instance.delete()
 
 
@@ -135,11 +154,19 @@ class ProcedureInputViewSet(
     serializer_class = ProcedureInputSerializer
 
     def perform_create(self, serializer):
-        # todo:
-        serializer.save()
+        procedure = Procedure.objects.filter(
+            signature=self.kwargs.get(
+                'parent_lookup_procedure__signature')
+        ).first()
+        if not procedure:
+            raise exceptions.NotFound()
+
+        try:
+            serializer.save(procedure=procedure)
+        except IntegrityError as e:
+            raise exceptions.ValidationError(str(e))
 
     def perform_destroy(self, instance):
-        # todo:
         instance.delete()
 
 
@@ -152,14 +179,24 @@ class ProcedureOutputViewSet(
     serializer_class = ProcedureOutputSerializer
 
     def perform_create(self, serializer):
-        # todo:
-        serializer.save()
+        procedure = Procedure.objects.filter(
+            signature=self.kwargs.get(
+                'parent_lookup_procedure__signature')
+        ).first()
+        if not procedure:
+            raise exceptions.NotFound()
+
+        try:
+            serializer.save(procedure=procedure)
+        except IntegrityError as e:
+            raise exceptions.ValidationError(str(e))
 
     def perform_destroy(self, instance):
-        # todo:
         instance.delete()
 
     @decorators.action(
+        url_name='detail',
+        url_path='detail',
         methods=['put', 'get'],
         detail=False,
         serializer_class=ProcedureOutputDetailSerializer,
