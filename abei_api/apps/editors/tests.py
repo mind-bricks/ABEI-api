@@ -1,5 +1,3 @@
-import os
-
 from rest_framework import (
     reverse,
     status,
@@ -9,7 +7,7 @@ from rest_framework import (
 
 class ProcedureSiteTest(test.APITestCase):
     fixtures = [
-        os.path.join('fixtures', 'test_editors.json')
+        'test_editors.json',
     ]
 
     def test_create_site(self):
@@ -81,7 +79,7 @@ class ProcedureSiteTest(test.APITestCase):
 
 class ProcedureTest(test.APITestCase):
     fixtures = [
-        os.path.join('fixtures', 'test_editors.json')
+        'test_editors.json',
     ]
 
     def test_create_procedure(self):
@@ -204,7 +202,7 @@ class ProcedureTest(test.APITestCase):
 
 class ProcedureJointTest(test.APITestCase):
     fixtures = [
-        os.path.join('fixtures', 'test_editors.json')
+        'test_editors.json',
     ]
 
     def test_create_joint(self):
@@ -315,7 +313,7 @@ class ProcedureJointTest(test.APITestCase):
 
 class ProcedureOutputTest(test.APITestCase):
     fixtures = [
-        os.path.join('fixtures', 'test_editors.json')
+        'test_editors.json',
     ]
 
     def test_create_output(self):

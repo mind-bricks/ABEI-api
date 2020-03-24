@@ -130,12 +130,12 @@ class ProcedureOutput(models.Model):
 class ProcedureOutputDetail(models.Model):
     output = models.OneToOneField(
         ProcedureOutput,
-        null=True,
         related_name='detail',
         on_delete=models.CASCADE,
     )
     output_joint = models.ForeignKey(
         ProcedureJoint,
+        null=True,
         related_name='output_references',
         on_delete=models.PROTECT,
     )

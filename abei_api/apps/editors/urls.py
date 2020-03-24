@@ -2,8 +2,8 @@ from django.urls import (
     include,
     path,
 )
-from rest_framework_extensions.routers import (
-    ExtendedDefaultRouter,
+from rest_framework_extensions import (
+    routers,
 )
 
 from .views import (
@@ -17,7 +17,7 @@ from .views import (
 )
 
 app_name = 'editors'
-router = ExtendedDefaultRouter()
+router = routers.ExtendedDefaultRouter()
 router_site = router.register(
     r'sites',
     ProcedureSiteViewSet,

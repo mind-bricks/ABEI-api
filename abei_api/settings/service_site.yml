@@ -1,11 +1,38 @@
+# basic ---------------------------------------------------------------------
+#- entries:
+#    - interface: abei.interfaces.IStorage
+#      name: yml
+#    - interface: abei.interfaces.IStorage
+#      name:
+#  class: abei.implements.storage_yml_file.Storage
+
+#- entries:
+#    - interface: abei.interfaces.IService
+#      name: redis
+#  class: abei.implements.service_redis.Service
+
+# procedure related ---------------------------------------------------------
 - entries:
-    - interface: abei.interfaces.IStorage
-      name: yml
-    - interface: abei.interfaces.IStorage
+    - interface: abei.interfaces.IProcedureBuilder
       name:
-  class: abei.implements.storage_yml_file.Storage
+  class: abei.implements.procedure.ProcedureBuilder
 
 - entries:
-    - interface: abei.interfaces.IService
-      name: redis
-  class: abei.implements.service_redis.Service
+    - interface: abei.interfaces.IProcedureFactory
+      name:
+  class: abei.implements.procedure.ProcedureFactory
+
+- entries:
+    - interface: abei.interfaces.IProcedureJointFactory
+      name:
+  class: abei.implements.procedure.ProcedureJointFactory
+
+- entries:
+    - interface: abei.interfaces.IProcedureDataFactory
+      name:
+  class: abei.implements.procedure.ProcedureDataFactory
+
+- entries:
+    - interface: abei.interfaces.IProcedureSiteFactory
+      name:
+  class: abei.implements.procedure.ProcedureSiteFactory

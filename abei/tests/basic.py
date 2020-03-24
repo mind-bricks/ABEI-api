@@ -19,6 +19,7 @@ class TestCaseBasic(TestCase):
     @classmethod
     def setUpClass(cls):
         builder = ServiceBuilder()
+        builder.ensure_dependencies()
         for filename in cls.service_config_files:
             builder.load_yaml(cls.service_site, (
                 os.path.isabs(filename) and

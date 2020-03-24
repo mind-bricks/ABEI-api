@@ -10,6 +10,10 @@ class ProcedureDataBasic(IProcedureData):
     value_type = type(None)
     value = None
 
+    def __init__(self, value=None):
+        if value:
+            self.set_value(value)
+
     def clone(self):
         instance = self.__class__()
         instance.value = self.value
@@ -25,10 +29,11 @@ class ProcedureDataBasic(IProcedureData):
         return self.value
 
     def set_value(self, value):
-        if not isinstance(value, self.value_type):
-            raise TypeError(
-                'incorrect value type of procedure data')
-        self.value = value
+        self.value = (
+            value if
+            isinstance(value, self.value_type) else
+            self.value_type(value)
+        )
 
 
 class ProcedureDataBool(ProcedureDataBasic):
