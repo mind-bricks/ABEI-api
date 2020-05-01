@@ -11,7 +11,7 @@ from .models import (
 )
 from .tasks import (
     load_procedure,
-    load_and_run_procedure,
+    # load_and_run_procedure,
     run_procedure,
 )
 

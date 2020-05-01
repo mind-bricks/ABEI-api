@@ -1,4 +1,5 @@
 import os
+import random
 
 from abei.interfaces import (
     IProcedureBuilder,
@@ -141,3 +142,29 @@ class TestProcedure(TestCaseBasic):
         self.assertTrue(all(outputs))
         self.assertEqual(outputs[0].get_value(), 30)
         self.assertEqual(outputs[1].get_value(), 11)
+
+        procedure = site.get_procedure('test-procedure-1.3')
+        self.assertIsNotNone(procedure)
+        self.assertEqual(procedure.get_docstring(), '(x + y) * z')
+        x = random.random() * random.randint(1, 10)
+        y = random.random() * random.randint(1, 10)
+        z = random.random() * random.randint(1, 10)
+        input_1 = data_factory.create('float@py', value=x)
+        input_2 = data_factory.create('float@py', value=y)
+        input_3 = data_factory.create('float@py', value=z)
+        outputs = procedure.run([input_1, input_2, input_3])
+        self.assertEqual(len(outputs), 1)
+        self.assertEqual(outputs[0].get_value(), (x + y) * z)
+
+        procedure = site.get_procedure('test-procedure-1.4')
+        self.assertIsNotNone(procedure)
+        self.assertEqual(procedure.get_docstring(), 'x + y * z')
+        x = random.random() * random.randint(1, 10)
+        y = random.random() * random.randint(1, 10)
+        z = random.random() * random.randint(1, 10)
+        input_1 = data_factory.create('float@py', value=x)
+        input_2 = data_factory.create('float@py', value=y)
+        input_3 = data_factory.create('float@py', value=z)
+        outputs = procedure.run([input_1, input_2, input_3])
+        self.assertEqual(len(outputs), 1)
+        self.assertEqual(outputs[0].get_value(), x + y * z)
