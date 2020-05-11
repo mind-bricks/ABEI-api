@@ -13,6 +13,49 @@ from ..util import (
     LazyProperty,
 )
 
+keyword_procedure_signature = 'fn'
+keyword_procedure_input_signatures = 'args'
+keyword_procedure_output_signatures = 'return'
+keyword_procedure_outputs = 'out'
+keyword_procedure_document = 'doc'
+keyword_joints = 'statements'
+keyword_joint_name = 'name'
+keyword_joint_procedure = 'call'
+keyword_joint_inputs = 'in'
+
+
+class ProcedureJointBuilder(object):
+    def __init__(
+            self,
+            procedure_builder,
+            procedure_site,
+            procedure,
+            data,
+    ):
+        self.procedure_builder = procedure_builder
+        self.procedure_site = procedure_site
+        self.procedure = procedure
+        assert isinstance(data, dict)
+        self.data = data
+
+    @property
+    def name(self):
+        return self.data.get(keyword_joint_name)
+
+    @property
+    def inputs(self):
+        return self.data.get(keyword_joint_inputs)
+
+    @LazyProperty
+    def instance(self):
+        joint_procedure = self.procedure_site.get_procedure(
+            self.data.get(keyword_joint_procedure))
+        return self.procedure_builder.procedure_joint_factory.create(
+            joint_procedure,
+            self.procedure,
+            signature=self.name,
+        )
+
 
 class ProcedureBuilder(ServiceBasic, IProcedureBuilder):
 
@@ -36,14 +79,16 @@ class ProcedureBuilder(ServiceBasic, IProcedureBuilder):
             raise ValueError(
                 'invalid procedure in configuration file')
 
-        input_signatures = procedure_object.get('input_signatures', [])
+        input_signatures = procedure_object.get(
+            keyword_procedure_input_signatures, [])
         if not isinstance(input_signatures, list):
             raise ValueError(
                 'invalid procedure input signatures')
 
         input_signatures = [str(sig) for sig in input_signatures]
 
-        output_signatures = procedure_object.get('output_signatures', [])
+        output_signatures = procedure_object.get(
+            keyword_procedure_output_signatures, [])
         if not isinstance(output_signatures, list):
             raise ValueError(
                 'invalid procedure output signatures')
@@ -52,8 +97,10 @@ class ProcedureBuilder(ServiceBasic, IProcedureBuilder):
 
         procedure = self.procedure_factory.create(
             'composite@py',
-            signature=str(procedure_object.get('signature', '')),
-            docstring=str(procedure_object.get('docstring', '')),
+            signature=str(procedure_object.get(
+                keyword_procedure_signature, '')),
+            docstring=str(procedure_object.get(
+                keyword_procedure_document, '')),
             input_signatures=input_signatures,
             output_signatures=output_signatures,
         )
@@ -62,68 +109,73 @@ class ProcedureBuilder(ServiceBasic, IProcedureBuilder):
             isinstance(procedure, IProcedureDetail)
         )
 
-        procedure_joints = procedure_object.get('joints', {})
+        procedure_joints = procedure_object.get(keyword_joints, [])
+        procedure_joints = [
+            ProcedureJointBuilder(
+                self,
+                procedure_site,
+                procedure,
+                jt
+            ) for jt in procedure_joints
+        ]
+        procedure_joints = {jt.name: jt for jt in procedure_joints}
         self.load_joints(
             procedure_site,
             procedure,
             procedure_joints,
         )
 
-        procedure_output_joints = procedure_object.get('outputs', [])
+        procedure_output_joints = procedure_object.get(
+            keyword_procedure_outputs, [])
         if not isinstance(procedure_output_joints, list):
             raise ValueError('invalid procedure joints')
 
-        input_joints = []
-        input_indices = []
-        for joint_key, i in procedure_output_joints:
-            if joint_key is None:
-                input_joints.append(None)
-            elif joint_key in procedure_joints:
-                input_joints.append(
-                    procedure_joints[joint_key]['instance'])
-            else:
-                raise ValueError('invalid procedure joint')
-            input_indices.append(i)
-
-        procedure.set_joints(input_joints, input_indices)
+        procedure.set_joints(*self.load_joint_inputs(
+            procedure_output_joints, procedure_joints))
         procedure_site.register_procedure(procedure)
 
     def load_joints(self, procedure_site, procedure, joint_objects):
         if not isinstance(joint_objects, dict):
             raise ValueError('invalid procedure joints')
 
-        # create joints
-        for joint_signature, joint_object in joint_objects.items():
-            if not isinstance(joint_object, dict):
-                raise ValueError('invalid procedure joint config')
-            joint_procedure = procedure_site.get_procedure(
-                joint_object.get('procedure'))
-            joint = self.procedure_joint_factory.create(
-                joint_procedure,
-                procedure,
-                signature=joint_signature,
-            )
-            joint_object['instance'] = joint
-
         # connect joints
         for joint_signature, joint_object in joint_objects.items():
-            input_joint_objects = joint_object.get('inputs', [])
-            if not isinstance(input_joint_objects, list):
+            joint_inputs = joint_object.inputs
+            if not isinstance(joint_inputs, list):
                 raise ValueError('invalid procedure joint config')
 
-            joint = joint_object['instance']
-            input_joints = []
-            input_indices = []
-            for joint_key, i in input_joint_objects:
-                if joint_key is None:
-                    input_joints.append(None)
-                elif joint_key in joint_objects:
-                    input_joints.append(
-                        joint_objects[joint_key]['instance'])
-                else:
+            joint_object.instance.set_joints(
+                *self.load_joint_inputs(joint_inputs, joint_objects))
+
+    @staticmethod
+    def load_joint_inputs(joint_inputs, joint_objects):
+        input_joints = []
+        input_indices = []
+        for joint_input in joint_inputs:
+            if not isinstance(joint_input, str):
+                raise ValueError('invalid procedure joint input')
+
+            if joint_input.startswith('$'):
+                joint_input = joint_input.strip('$')
+                if not joint_input.isdigit():
+                    raise ValueError('invalid joint input')
+                input_joints.append(None)
+                input_indices.append(int(joint_input))
+            else:
+                joint_input_tokens = joint_input.split('[')
+                if len(joint_input_tokens) != 2:
+                    raise ValueError('invalid joint input')
+                joint_input_joint, joint_input_index = joint_input_tokens
+                joint_input_joint = joint_input_joint.strip()
+                joint_input_index = joint_input_index.strip(']').strip()
+                if joint_input_joint not in joint_objects:
                     raise ValueError('invalid joint')
-                input_indices.append(i)
-            joint.set_joints(input_joints, input_indices)
+                if not joint_input_index.isdigit():
+                    raise ValueError('invalid joint input')
+                input_joints.append(
+                    joint_objects[joint_input_joint].instance)
+                input_indices.append(int(joint_input_index))
+        return input_joints, input_indices
 
     def load_object(self, procedure_site, config_object):
         if not isinstance(config_object, (tuple, list)):
