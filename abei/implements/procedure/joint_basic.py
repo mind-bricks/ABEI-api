@@ -23,15 +23,16 @@ def joint_validate(joints, indices, procedure, signatures):
         if not joint:
             input_sig = signatures_in
         elif isinstance(joint, ProcedureJointBasic):
-            assert \
-                joint.outer_procedure is procedure, \
+            assert joint.outer_procedure is procedure, \
                 'incorrect outer procedure'
             input_sig = joint.inner_procedure.get_output_signatures()
         else:
             raise AssertionError('incorrect flow type')
 
-        assert i < len(input_sig), 'invalid index'
-        assert sig == input_sig[i], 'input type miss match'
+        assert i < len(input_sig), \
+            'input index {} >= {}'.format(i, input_sig)
+        assert sig == input_sig[i], \
+            'input type {} mismatch {}'.format(sig, input_sig[i])
 
 
 def joint_run(joint, procedure_data_list, **kwargs):

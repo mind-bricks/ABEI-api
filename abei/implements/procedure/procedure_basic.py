@@ -11,6 +11,8 @@ from abei.interfaces import (
 from .data_basic import (
     ProcedureDataBasic,
     ProcedureDataBool,
+    ProcedureDataInt,
+    ProcedureDataFloat,
 )
 from .joint_basic import (
     joint_validate,
@@ -43,13 +45,13 @@ class ProcedureBasic(IProcedure):
         # assert isinstance(kwargs.setdefault('procedure_cache', {}), dict)
         return (
             self.run_normally(procedure_data_list, **kwargs) if
-            self.run_input_check(
+            self.run_validation(
                 procedure_data_list, self.input_signatures) else
             self.run_exceptionally(procedure_data_list, **kwargs)
         )
 
     @staticmethod
-    def run_input_check(procedure_data_list, signatures):
+    def run_validation(procedure_data_list, signatures):
         if len(procedure_data_list) != len(signatures):
             raise AssertionError('invalid data list')
 
@@ -115,18 +117,19 @@ class ProcedureComposite(IProcedureDetail, ProcedureBasic):
 class ProcedureBuiltin(ProcedureBasic):
     name = 'builtin_op@py'
 
-    def __init__(self, data_signature):
-        self.signature = '{}:{}'.format(data_signature, self.name)
+    def __init__(self, data_class):
+        self.signature = '{}:{}'.format(
+            data_class.signature, self.name)
 
 
 class ProcedureUnaryOperator(ProcedureBuiltin):
     name = 'unary_op@py'
     native_function = staticmethod(lambda x: x)
 
-    def __init__(self, data_signature=ProcedureDataBasic.signature):
-        super().__init__(data_signature)
-        self.input_signatures = [data_signature]
-        self.output_signatures = [data_signature]
+    def __init__(self, data_class=ProcedureDataBasic):
+        super().__init__(data_class)
+        self.input_signatures = [data_class.signature]
+        self.output_signatures = [data_class.signature]
 
     def run_normally(self, procedure_data_list, **kwargs):
         ret = procedure_data_list[0].clone()
@@ -139,10 +142,13 @@ class ProcedureBinaryOperator(ProcedureBuiltin):
     name = 'binary_op@py'
     native_function = staticmethod(lambda x, y: x)
 
-    def __init__(self, data_signature=ProcedureDataBasic.signature):
-        super().__init__(data_signature)
-        self.input_signatures = [data_signature, data_signature]
-        self.output_signatures = [data_signature]
+    def __init__(self, data_class=ProcedureDataBasic):
+        super().__init__(data_class)
+        self.input_signatures = [
+            data_class.signature,
+            data_class.signature,
+        ]
+        self.output_signatures = [data_class.signature]
 
     def run_normally(self, procedure_data_list, **kwargs):
         ret = procedure_data_list[0].clone()
@@ -157,10 +163,13 @@ class ProcedureComparator(ProcedureBuiltin):
     name = 'compare@py'
     native_function = staticmethod(lambda x, y: True)
 
-    def __init__(self, data_signature=ProcedureDataBasic.signature):
-        super().__init__(data_signature)
-        self.input_signatures = [data_signature, data_signature]
-        self.output_signatures = [data_signature]
+    def __init__(self, data_class=ProcedureDataBasic):
+        super().__init__(data_class)
+        self.input_signatures = [
+            data_class.signature,
+            data_class.signature,
+        ]
+        self.output_signatures = [data_class.signature]
 
     def run_normally(self, procedure_data_list, **kwargs):
         ret = ProcedureDataBool()
@@ -171,83 +180,102 @@ class ProcedureComparator(ProcedureBuiltin):
         return [ret]
 
 
-class ProcedureFilter(ProcedureBuiltin):
-    name = 'filter@py'
+# class ProcedureFilter(ProcedureBuiltin):
+#     name = 'filter@py'
+#
+#     def __init__(
+#             self,
+#             data_class=ProcedureDataBasic,
+#             data_count=1,
+#     ):
+#         super().__init__(data_class)
+#         self.data_signature = data_class.signature
+#         signatures = [data_class.signature] * data_count
+#         self.input_signatures = ['int@py', *signatures]
+#         self.output_signatures = signatures
+#
+#     def run_normally(self, procedure_data_list, **kwargs):
+#         flag = procedure_data_list[0].get_value()
+#         assert isinstance(flag, int)
+#
+#         return [
+#             (flag & (1 >> i)) and
+#             procedure_data_list[i + 1] or None
+#             for i in range(len(self.output_signatures))
+#         ]
+#
+#     def run_exceptionally(self, procedure_data_list, **kwargs):
+#         return self.run_normally(procedure_data_list, **kwargs)
+
+
+class ProcedureDiverge(ProcedureBuiltin):
+    name = 'diverge2@py'
 
     def __init__(
             self,
-            data_signature=ProcedureDataBasic.signature,
-            data_count=1,
+            data_class=ProcedureDataBasic,
+            # data_count=2,
     ):
-        super().__init__(data_signature)
-        self.data_signature = data_signature
-        signatures = [data_signature] * data_count
-        self.input_signatures = ['int@py', *signatures]
-        self.output_signatures = signatures
-
-    def run_normally(self, procedure_data_list, **kwargs):
-        flag = procedure_data_list[0].get_value()
-        assert isinstance(flag, int)
-
-        return [
-            (flag & (1 >> i)) and
-            procedure_data_list[i + 1] or None
-            for i in range(len(self.output_signatures))
+        super().__init__(data_class)
+        self.input_signatures = [
+            'bool@py',
+            data_class.signature,
         ]
-
-    def run_exceptionally(self, procedure_data_list, **kwargs):
-        return self.run_normally(procedure_data_list, **kwargs)
-
-
-class ProcedureBranch(ProcedureBuiltin):
-    name = 'branch@py'
-
-    def __init__(
-            self,
-            data_signature=ProcedureDataBasic.signature,
-            data_count=2,
-    ):
-        super().__init__(data_signature)
-        signatures = [data_signature] * data_count
-        self.input_signatures = ['int@py', data_signature]
-        self.output_signatures = signatures
+        self.output_signatures = [
+            data_class.signature,
+            data_class.signature,
+        ]
 
     def run_normally(self, procedure_data_list, **kwargs):
         flag = procedure_data_list[0].get_value()
         ret = procedure_data_list[1]
-        return [
-            (flag & (1 >> i)) and ret or None
-            for i in range(len(self.output_signatures))
-        ]
-
-
-class ProcedureSelect(ProcedureBuiltin):
-    name = 'select@py'
-
-    def __init__(
-            self,
-            data_signature=ProcedureDataBasic.signature,
-            data_count=2,
-    ):
-        super().__init__(data_signature)
-        signatures = [data_signature] * data_count
-        self.input_signatures = ['int@py', *signatures]
-        self.output_signatures = [data_signature]
-
-    def run_normally(self, procedure_data_list, **kwargs):
-        flag = procedure_data_list[0].get_value()
-        assert isinstance(flag, int)
-
-        import math
-        index = int(math.log2(flag)) + 1
-
-        return [
-            procedure_data_list[index] if
-            index < len(procedure_data_list) else None
-        ]
+        return flag and [ret, None] or [None, ret]
 
     def run_exceptionally(self, procedure_data_list, **kwargs):
         return self.run_normally(procedure_data_list, **kwargs)
+
+
+class ProcedureConverge(ProcedureBuiltin):
+    name = 'converge2@py'
+
+    def __init__(
+            self,
+            data_class=ProcedureDataBasic,
+            # data_count=2,
+    ):
+        super().__init__(data_class)
+        self.input_signatures = [
+            'bool@py',
+            data_class.signature,
+            data_class.signature,
+        ]
+        self.output_signatures = [
+            data_class.signature,
+        ]
+
+    def run_normally(self, procedure_data_list, **kwargs):
+        flag = procedure_data_list[0].get_value()
+        ret = procedure_data_list[flag and 1 or 2]
+        return [ret]
+
+    def run_exceptionally(self, procedure_data_list, **kwargs):
+        return self.run_normally(procedure_data_list, **kwargs)
+
+
+class ProcedureCast(ProcedureBuiltin):
+    name = 'cast@py'
+    to_data_class = ProcedureDataBasic
+
+    def __init__(self, data_class=ProcedureDataBasic):
+        super().__init__(data_class)
+        self.input_signatures = [data_class.signature]
+        self.output_signatures = [self.to_data_class.signature]
+
+    def run_normally(self, procedure_data_list, **kwargs):
+        ret = self.to_data_class()
+        ret.set_value(self.to_data_class.value_type(
+            procedure_data_list[0].get_value()))
+        return [ret]
 
 
 class ProcedureNot(ProcedureUnaryOperator):
@@ -340,6 +368,21 @@ class ProcedureGreaterThanEqual(ProcedureComparator):
     native_function = staticmethod(lambda x, y: x >= y)
 
 
+class ProcedureCastToBool(ProcedureCast):
+    name = 'cast_to_bool@py'
+    to_data_class = ProcedureDataBool
+
+
+class ProcedureCastToInt(ProcedureCast):
+    name = 'cast_to_int@py'
+    to_data_class = ProcedureDataInt
+
+
+class ProcedureCastToFloat(ProcedureCast):
+    name = 'cast_to_float@py'
+    to_data_class = ProcedureDataFloat
+
+
 class ProcedureFactoryBasic(IProcedureFactory):
 
     def __init__(self, service_site, **kwargs):
@@ -363,9 +406,12 @@ class ProcedureFactoryBasic(IProcedureFactory):
             ProcedureLessThanOrEqual,
             ProcedureGreaterThan,
             ProcedureGreaterThanEqual,
-            ProcedureFilter,
-            ProcedureBranch,
-            ProcedureSelect,
+            # ProcedureFilter,
+            ProcedureDiverge,
+            ProcedureConverge,
+            ProcedureCastToBool,
+            ProcedureCastToInt,
+            ProcedureCastToFloat,
         ]}
 
     def create(self, class_name, **kwargs):

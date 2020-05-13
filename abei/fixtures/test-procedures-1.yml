@@ -98,3 +98,65 @@
         - joint-1[0]
   out:
     - joint-2[0]
+
+- fn: 'test-procedure-1.5'
+  args:
+    - bool@py
+    - float@py
+    - float@py
+  return:
+    - float@py
+  doc: 'z ? x + y : x - y'
+  statements:
+    - name: x-plus-y
+      call: float@py:add@py
+      in:
+        - $1
+        - $2
+    - name: x-minus-y
+      call: float@py:sub@py
+      in:
+        - $1
+        - $2
+    - name: plus-or-minus
+      call: float@py:converge2@py
+      in:
+        - $0
+        - x-plus-y[0]
+        - x-minus-y[0]
+  out:
+    - plus-or-minus[0]
+
+
+- fn: 'test-procedure-1.6'
+  args:
+    - bool@py
+    - float@py
+    - float@py
+  return:
+    - float@py
+  doc: 'z ? x + y : x - y (optimized)'
+  statements:
+    - name: select-x
+      call: float@py:diverge2@py
+      in:
+        - $0
+        - $1
+    - name: x-plus-y
+      call: float@py:add@py
+      in:
+        - select-x[0]
+        - $2
+    - name: x-minus-y
+      call: float@py:sub@py
+      in:
+        - select-x[1]
+        - $2
+    - name: plus-or-minus
+      call: float@py:converge2@py
+      in:
+        - $0
+        - x-plus-y[0]
+        - x-minus-y[0]
+  out:
+    - plus-or-minus[0]

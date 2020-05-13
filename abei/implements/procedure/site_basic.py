@@ -2,6 +2,7 @@ from abei.interfaces import (
     IProcedure,
     IProcedureSite,
     IProcedureSiteFactory,
+    IProcedureDataFactory,
     IProcedureFactory,
     service_entry as _
 )
@@ -61,49 +62,59 @@ class ProcedureSiteFactoryBasic(IProcedureSiteFactory):
     @LazyProperty
     def builtin_site(self):
         service = self.service_site.get_service(_(IProcedureFactory))
+        service_d = self.service_site.get_service(_(IProcedureDataFactory))
+
+        class_bool = service_d.get_class('bool@py')
+        class_int = service_d.get_class('int@py')
+        class_float = service_d.get_class('float@py')
+        class_string = service_d.get_class('string@py')
+
         site = ProcedureSiteBasic()
         for p in [
-            service.create('not@py', data_signature='bool@py'),
-            service.create('and@py', data_signature='bool@py'),
-            service.create('or@py', data_signature='bool@py'),
+            service.create('not@py', data_class=class_bool),
+            service.create('and@py', data_class=class_bool),
+            service.create('or@py', data_class=class_bool),
 
-            service.create('neg@py', data_signature='int@py'),
-            service.create('sq@py', data_signature='int@py'),
-            service.create('add@py', data_signature='int@py'),
-            service.create('sub@py', data_signature='int@py'),
-            service.create('mul@py', data_signature='int@py'),
-            service.create('mod@py', data_signature='int@py'),
-            service.create('mod_div@py', data_signature='int@py'),
-            service.create('pow@py', data_signature='int@py'),
-            service.create('eq@py', data_signature='int@py'),
-            service.create('ne@py', data_signature='int@py'),
-            service.create('lt@py', data_signature='int@py'),
-            service.create('lte@py', data_signature='int@py'),
-            service.create('gt@py', data_signature='int@py'),
-            service.create('gte@py', data_signature='int@py'),
-            service.create('filter@py', data_signature='int@py'),
+            service.create('neg@py', data_class=class_int),
+            service.create('sq@py', data_class=class_int),
+            service.create('add@py', data_class=class_int),
+            service.create('sub@py', data_class=class_int),
+            service.create('mul@py', data_class=class_int),
+            service.create('mod@py', data_class=class_int),
+            service.create('mod_div@py', data_class=class_int),
+            service.create('pow@py', data_class=class_int),
+            service.create('eq@py', data_class=class_int),
+            service.create('ne@py', data_class=class_int),
+            service.create('lt@py', data_class=class_int),
+            service.create('lte@py', data_class=class_int),
+            service.create('gt@py', data_class=class_int),
+            service.create('gte@py', data_class=class_int),
+            service.create('diverge2@py', data_class=class_int),
+            service.create('converge2@py', data_class=class_int),
 
-            service.create('neg@py', data_signature='float@py'),
-            service.create('sq@py', data_signature='float@py'),
-            service.create('add@py', data_signature='float@py'),
-            service.create('sub@py', data_signature='float@py'),
-            service.create('mul@py', data_signature='float@py'),
-            service.create('div@py', data_signature='float@py'),
-            service.create('mod@py', data_signature='float@py'),
-            service.create('mod_div@py', data_signature='float@py'),
-            service.create('pow@py', data_signature='float@py'),
-            service.create('eq@py', data_signature='float@py'),
-            service.create('ne@py', data_signature='float@py'),
-            service.create('lt@py', data_signature='float@py'),
-            service.create('lte@py', data_signature='float@py'),
-            service.create('gt@py', data_signature='float@py'),
-            service.create('gte@py', data_signature='float@py'),
-            service.create('filter@py', data_signature='float@py'),
+            service.create('neg@py', data_class=class_float),
+            service.create('sq@py', data_class=class_float),
+            service.create('add@py', data_class=class_float),
+            service.create('sub@py', data_class=class_float),
+            service.create('mul@py', data_class=class_float),
+            service.create('div@py', data_class=class_float),
+            service.create('mod@py', data_class=class_float),
+            service.create('mod_div@py', data_class=class_float),
+            service.create('pow@py', data_class=class_float),
+            service.create('eq@py', data_class=class_float),
+            service.create('ne@py', data_class=class_float),
+            service.create('lt@py', data_class=class_float),
+            service.create('lte@py', data_class=class_float),
+            service.create('gt@py', data_class=class_float),
+            service.create('gte@py', data_class=class_float),
+            service.create('diverge2@py', data_class=class_float),
+            service.create('converge2@py', data_class=class_float),
 
-            service.create('add@py', data_signature='string@py'),
-            service.create('eq@py', data_signature='string@py'),
-            service.create('ne@py', data_signature='string@py'),
-            service.create('filter@py', data_signature='string@py'),
+            service.create('add@py', data_class=class_string),
+            service.create('eq@py', data_class=class_string),
+            service.create('ne@py', data_class=class_string),
+            service.create('diverge2@py', data_class=class_string),
+            service.create('converge2@py', data_class=class_string),
         ]:
             site.register_procedure(p)
         return site

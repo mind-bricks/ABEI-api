@@ -11,7 +11,7 @@ class ProcedureDataBasic(IProcedureData):
     value = None
 
     def __init__(self, value=None):
-        if value:
+        if value is not None:
             self.set_value(value)
 
     def clone(self):
@@ -74,8 +74,16 @@ class ProcedureDataFactoryBasic(IProcedureDataFactory):
         ])
 
     def create(self, signature, **kwargs):
-        data_class = self.data_classes.get(signature)
-        return data_class and data_class(**kwargs)
+        return self.get_class(signature)(**kwargs)
+
+    def get_class(self, signature):
+        data_class = self.query_class(signature)
+        if not data_class:
+            raise LookupError('data class not found')
+        return data_class
+
+    def query_class(self, signature):
+        return self.data_classes.get(signature)
 
     def register_class(self, signature, procedure_data_class, **kwargs):
         assert signature not in self.data_classes

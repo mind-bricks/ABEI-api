@@ -54,6 +54,20 @@ class IProcedureDataFactory(IService):
         """
 
     @abstractmethod
+    def get_class(self, signature):
+        """
+        :param signature:
+        :return:
+        """
+
+    @abstractmethod
+    def query_class(self, signature):
+        """
+        :param signature:
+        :return:
+        """
+
+    @abstractmethod
     def register_class(self, signature, procedure_data_class, **kwargs):
         """
         :param signature:
