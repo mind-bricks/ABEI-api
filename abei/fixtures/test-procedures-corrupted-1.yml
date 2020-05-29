@@ -1,0 +1,36 @@
+- fn: 'number-count'
+  args:
+    - int@py  # count start
+    - int@py  # count step
+    - int@py  # count max
+  return:
+    - int@py
+  doc: 'count number'
+  statements:
+    - name: count-has-started
+      call: int@py:probe@py
+      in:
+        - count-step[0]
+    - name: count-has-finished
+      call: int@py:gte@py
+      in:
+        - count-step[0]
+        - $2
+    - name: count-start
+      call: int@py:converge2@py
+      in:
+        - count-has-started[0]
+        - $0
+        - count-step[0]
+    - name: count-step
+      call: int@py:add@py
+      in:
+        - count-start[0]
+        - $1
+    - name: count-finish
+      call: int@py:diverge2@py
+      in:
+        - count-has-finished[0]
+        - count-step[0]
+  out:
+    - count-finish[0]

@@ -64,7 +64,7 @@ class ProcedureDataString(ProcedureDataBasic):
     value = ''
 
 
-class ProcedureDataFactoryBasic(IProcedureDataFactory):
+class ProcedureDataFactory(IProcedureDataFactory):
     def __init__(self, service_site, **kwargs):
         self.data_classes = dict([
             (ProcedureDataBool.signature, ProcedureDataBool),

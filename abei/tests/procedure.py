@@ -1,5 +1,6 @@
 import os
 import random
+import unittest
 
 from abei.interfaces import (
     IProcedureBuilder,
@@ -12,8 +13,10 @@ from abei.interfaces import (
     IProcedureSiteFactory,
     service_entry as _
 )
-from abei.implements.procedure import (
+from abei.implements.procedure_basic import (
     ProcedureBasic,
+)
+from abei.implements.procedure_data_basic import (
     ProcedureDataBasic,
 )
 
@@ -95,11 +98,23 @@ class TestProcedure(TestCaseBasic):
         self.assertNotEqual(len(procedures), 0)
         self.assertIs(procedure_1, procedure_3)
 
+    def test_procedure_builder(self):
+        site_factory = self.service_site.get_service(_(IProcedureSiteFactory))
+        site = site_factory.create(None)
+        builder = self.service_site.get_service(_(IProcedureBuilder))
+        self.assertRaises(
+            AssertionError,
+            lambda: builder.load_yaml(
+                site,
+                os.path.join(
+                    self.service_config_dir,
+                    'test-procedures-corrupted-1.yml'),
+            ))
 
-class TestProcedureRun(TestCaseBasic):
-    service_config_files = [
-        'test-components-basic.yml',
-    ]
+
+class TestProcedureRunBasic(TestCaseBasic):
+    service_config_files = []
+    procedure_config_files = []
     procedure_site = None
     procedure_data_factory = None
 
@@ -108,15 +123,25 @@ class TestProcedureRun(TestCaseBasic):
         super().setUpClass()
         cls.procedure_data_factory = cls.service_site.get_service(
             _(IProcedureDataFactory))
+
         cls.procedure_site = cls.service_site.get_service(
             _(IProcedureSiteFactory)).create(None)
-        cls.service_site.get_service(_(IProcedureBuilder)).load_yaml(
-            cls.procedure_site,
-            os.path.join(
-                cls.service_config_dir,
-                'test-procedures-1.yml'
-            ),
-        )
+
+        builder = cls.service_site.get_service(_(IProcedureBuilder))
+        for config_file in cls.procedure_config_files:
+            builder.load_yaml(
+                cls.procedure_site,
+                os.path.join(cls.service_config_dir, config_file),
+            )
+
+
+class TestProcedureRunSimple(TestProcedureRunBasic):
+    service_config_files = [
+        'test-components-basic.yml',
+    ]
+    procedure_config_files = [
+        'test-procedures-1.yml',
+    ]
 
     def test_run_1(self):
         procedure = self.procedure_site.get_procedure('test-procedure-1.1')
@@ -231,3 +256,22 @@ class TestProcedureRun(TestCaseBasic):
         outputs = procedure.run([input_1, input_2, input_3])
         self.assertEqual(len(outputs), 1)
         self.assertEqual(outputs[0].get_value(), x - y)
+
+
+class TestProcedureRunAlgorithm(TestProcedureRunBasic):
+    service_config_files = [
+        'test-components-basic.yml',
+    ]
+    procedure_config_files = [
+        'test-procedures-2.yml',
+    ]
+
+    @unittest.skip('')
+    def test_number_count(self):
+        procedure = self.procedure_site.get_procedure('number-count')
+        self.assertIsNotNone(procedure)
+        input_1 = self.procedure_data_factory.create('int@py', value=1)
+        input_2 = self.procedure_data_factory.create('int@py', value=1)
+        input_3 = self.procedure_data_factory.create('int@py', value=10)
+        outputs = procedure.run([input_1, input_2, input_3])
+        assert outputs

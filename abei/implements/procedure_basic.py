@@ -8,13 +8,13 @@ from abei.interfaces import (
     IProcedureDetail,
 )
 
-from .data_basic import (
+from .procedure_data_basic import (
     ProcedureDataBasic,
     ProcedureDataBool,
     ProcedureDataInt,
     ProcedureDataFloat,
 )
-from .joint_basic import (
+from .procedure_joint_basic import (
     joint_validate,
     joint_run,
 )
@@ -169,11 +169,12 @@ class ProcedureComparator(ProcedureBuiltin):
             data_class.signature,
             data_class.signature,
         ]
-        self.output_signatures = [data_class.signature]
+        self.output_signatures = [
+            ProcedureDataBool.signature,
+        ]
 
     def run_normally(self, procedure_data_list, **kwargs):
-        ret = ProcedureDataBool()
-        ret.set_value(self.native_function(
+        ret = ProcedureDataBool(value=self.native_function(
             procedure_data_list[0].get_value(),
             procedure_data_list[1].get_value(),
         ))
@@ -218,7 +219,7 @@ class ProcedureDiverge(ProcedureBuiltin):
     ):
         super().__init__(data_class)
         self.input_signatures = [
-            'bool@py',
+            ProcedureDataBool.signature,
             data_class.signature,
         ]
         self.output_signatures = [
@@ -245,7 +246,7 @@ class ProcedureConverge(ProcedureBuiltin):
     ):
         super().__init__(data_class)
         self.input_signatures = [
-            'bool@py',
+            ProcedureDataBool.signature,
             data_class.signature,
             data_class.signature,
         ]
@@ -256,6 +257,23 @@ class ProcedureConverge(ProcedureBuiltin):
     def run_normally(self, procedure_data_list, **kwargs):
         flag = procedure_data_list[0].get_value()
         ret = procedure_data_list[flag and 1 or 2]
+        return [ret]
+
+    def run_exceptionally(self, procedure_data_list, **kwargs):
+        return self.run_normally(procedure_data_list, **kwargs)
+
+
+class ProcedureProbe(ProcedureBuiltin):
+    name = 'probe@py'
+
+    def __init__(self, data_class=ProcedureDataBasic):
+        super().__init__(data_class)
+        self.input_signatures = [data_class.signature]
+        self.output_signatures = [ProcedureDataBool.signature]
+
+    def run_normally(self, procedure_data_list, **kwargs):
+        ret = ProcedureDataBool(
+            value=bool(procedure_data_list[0] is not None))
         return [ret]
 
     def run_exceptionally(self, procedure_data_list, **kwargs):
@@ -383,11 +401,12 @@ class ProcedureCastToFloat(ProcedureCast):
     to_data_class = ProcedureDataFloat
 
 
-class ProcedureFactoryBasic(IProcedureFactory):
+class ProcedureFactory(IProcedureFactory):
 
     def __init__(self, service_site, **kwargs):
         self.procedure_classes = {p.name: p for p in [
             ProcedureComposite,
+            ProcedureProbe,
             ProcedureNot,
             ProcedureNegate,
             ProcedureSquare,

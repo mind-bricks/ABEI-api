@@ -7,10 +7,14 @@ from abei.interfaces import (
     service_entry as _,
 )
 
-from ..service_basic import ServiceBasic
-from ..util import (
+from abei.implements.service_basic import ServiceBasic
+from abei.implements.util import (
     FileLikeWrapper,
     LazyProperty,
+)
+
+from .procedure_joint_basic import (
+    joint_validate_dependents,
 )
 
 keyword_procedure_signature = 'fn'
@@ -130,8 +134,13 @@ class ProcedureBuilder(ServiceBasic, IProcedureBuilder):
         if not isinstance(procedure_output_joints, list):
             raise ValueError('invalid procedure joints')
 
-        procedure.set_joints(*self.load_joint_inputs(
-            procedure_output_joints, procedure_joints))
+        output_joints, output_indices = self.load_joint_inputs(
+            procedure_output_joints, procedure_joints)
+        for j in output_joints:
+            if j is not None:
+                joint_validate_dependents(j)
+
+        procedure.set_joints(output_joints, output_indices)
         procedure_site.register_procedure(procedure)
 
     def load_joints(self, procedure_site, procedure, joint_objects):

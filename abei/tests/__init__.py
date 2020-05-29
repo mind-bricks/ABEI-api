@@ -1,9 +1,11 @@
 __all__ = [
     'TestProcedure',
-    'TestProcedureRun',
+    'TestProcedureRunSimple',
+    'TestProcedureRunAlgorithm',
 ]
 
 from .procedure import (
     TestProcedure,
-    TestProcedureRun,
+    TestProcedureRunSimple,
+    TestProcedureRunAlgorithm,
 )

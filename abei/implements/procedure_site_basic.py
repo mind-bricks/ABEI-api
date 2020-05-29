@@ -6,7 +6,7 @@ from abei.interfaces import (
     IProcedureFactory,
     service_entry as _
 )
-from ..util import LazyProperty
+from abei.implements.util import LazyProperty
 
 
 class ProcedureSiteBasic(IProcedureSite):
@@ -54,7 +54,7 @@ class ProcedureSiteBasic(IProcedureSite):
         return self.procedure_sites
 
 
-class ProcedureSiteFactoryBasic(IProcedureSiteFactory):
+class ProcedureSiteFactory(IProcedureSiteFactory):
 
     def __init__(self, service_site, **kwargs):
         self.service_site = service_site
@@ -71,10 +71,12 @@ class ProcedureSiteFactoryBasic(IProcedureSiteFactory):
 
         site = ProcedureSiteBasic()
         for p in [
+            service.create('probe@py', data_class=class_bool),
             service.create('not@py', data_class=class_bool),
             service.create('and@py', data_class=class_bool),
             service.create('or@py', data_class=class_bool),
 
+            service.create('probe@py', data_class=class_int),
             service.create('neg@py', data_class=class_int),
             service.create('sq@py', data_class=class_int),
             service.create('add@py', data_class=class_int),
@@ -92,6 +94,7 @@ class ProcedureSiteFactoryBasic(IProcedureSiteFactory):
             service.create('diverge2@py', data_class=class_int),
             service.create('converge2@py', data_class=class_int),
 
+            service.create('probe@py', data_class=class_float),
             service.create('neg@py', data_class=class_float),
             service.create('sq@py', data_class=class_float),
             service.create('add@py', data_class=class_float),
@@ -110,6 +113,7 @@ class ProcedureSiteFactoryBasic(IProcedureSiteFactory):
             service.create('diverge2@py', data_class=class_float),
             service.create('converge2@py', data_class=class_float),
 
+            service.create('probe@py', data_class=class_string),
             service.create('add@py', data_class=class_string),
             service.create('eq@py', data_class=class_string),
             service.create('ne@py', data_class=class_string),

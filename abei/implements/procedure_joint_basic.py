@@ -29,38 +29,41 @@ def joint_validate(joints, indices, procedure, signatures):
         else:
             raise AssertionError('incorrect flow type')
 
-        assert i < len(input_sig), \
-            'input index {} >= {}'.format(i, input_sig)
-        assert sig == input_sig[i], \
-            'input type {} mismatch {}'.format(sig, input_sig[i])
+        if i >= len(input_sig):
+            raise AssertionError(
+                'input index {} >= {}'.format(i, input_sig))
+
+        if sig != input_sig[i]:
+            raise AssertionError(
+                'input type {} mismatch {}'.format(sig, input_sig[i]))
+
+
+def joint_validate_dependents(joint, dependents=None):
+    if not isinstance(dependents, frozenset):
+        dependents = frozenset()
+
+    signature = joint.get_signature()
+    if signature in dependents:
+        raise AssertionError(
+            'recursive dependency found in joint: {}'.format(signature))
+
+    dependents = dependents.union([signature])
+    for j, _ in joint.get_joints():
+        if j is not None:
+            joint_validate_dependents(j, dependents)
 
 
 def joint_run(joint, procedure_data_list, **kwargs):
     assert isinstance(joint, ProcedureJointBasic)
-    input_joints = joint.get_joints()
-
-    procedure_cache = (
-        kwargs.setdefault('procedure_cache', {}) if
-        joint.use_cache else None
-    )
-    # try to get output from cache
-    if isinstance(procedure_cache, dict):
-        output_data_list = procedure_cache.get(joint.signature)
-        if isinstance(output_data_list, (list, tuple)):
-            return output_data_list
 
     input_data_list = [
         joint_run(joint, procedure_data_list, **kwargs)[i] if
         joint else procedure_data_list[i]
-        for joint, i in input_joints
+        for joint, i in joint.get_joints()
     ]
 
     output_data_list = joint.inner_procedure.run(
         input_data_list, **kwargs)
-
-    # try to save output to cache
-    if isinstance(procedure_cache, dict):
-        procedure_cache[joint.signature] = output_data_list
 
     return output_data_list
 
