@@ -47,10 +47,13 @@ class ProcedureJointInputSerializer(serializers.ModelSerializer):
 
 
 class ProcedureJointSerializer(serializers.ModelSerializer):
-    procedure = serializers.SlugRelatedField(
-        source='inner_procedure',
-        slug_field='signature',
-        queryset=Procedure.objects.all(),
+    site = serializers.CharField(
+        source='inner_procedure.site.signature',
+        read_only=True,
+    )
+    procedure = serializers.CharField(
+        source='inner_procedure.signature',
+        read_only=True,
     )
     inputs = ProcedureJointInputSerializer(
         many=True,
@@ -61,21 +64,44 @@ class ProcedureJointSerializer(serializers.ModelSerializer):
         model = ProcedureJoint
         fields = [
             'signature',
+            'site',
             'procedure',
             'inputs',
         ]
 
-    def save(self, **kwargs):
-        instance = super().save(**kwargs)
-        base_site = instance.inner_procedure.site
-        base_sites = instance.outer_procedure.site.base_sites
-        if base_site and not base_sites.filter(
-                base_relations__base=base_site
+
+class ProcedureJointCreateSerializer(ProcedureJointSerializer):
+    site = serializers.CharField(
+        source='inner_procedure.site.signature',
+    )
+    procedure = serializers.CharField(
+        source='inner_procedure.signature',
+    )
+
+    def create(self, validated_data):
+        # get inner site
+        inner_procedure = validated_data['inner_procedure']
+        inner_site_signature = inner_procedure['site']['signature']
+
+        # check dependencies
+        outer_procedure = validated_data['outer_procedure']
+        if not outer_procedure.site.base_sites.filter(
+                signature=inner_site_signature
         ).exists():
             raise exceptions.ValidationError(
                 'procedure of joint should be in base sites')
 
-        return instance
+        # get inner procedure
+        inner_procedure = Procedure.objects.filter(
+            site__signature=inner_site_signature,
+            signature=inner_procedure['signature'],
+        ).first()
+        if not inner_procedure:
+            raise exceptions.ValidationError('invalid procedure')
+
+        validated_data['inner_procedure'] = inner_procedure
+        # create joint instance
+        return super().create(validated_data)
 
 
 class ProcedureInputSerializer(serializers.ModelSerializer):
@@ -146,14 +172,13 @@ class ProcedureSerializer(serializers.ModelSerializer):
 
     joints = serializers.SlugRelatedField(
         many=True,
-        read_only=True,
         slug_field='signature',
+        read_only=True,
     )
 
     site = serializers.SlugRelatedField(
         slug_field='signature',
-        # allow_null=True,
-        queryset=ProcedureSite.objects.all(),
+        read_only=True,
     )
 
     class Meta:

@@ -8,10 +8,9 @@ from rest_framework import (
     viewsets,
 )
 
-from rest_framework_extensions.mixins import (
+from ..mixins import (
     NestedViewSetMixin,
 )
-
 from .filters import (
     ProcedureSiteFilterSet,
     ProcedureFilterSet,
@@ -30,6 +29,7 @@ from .models import (
 from .serializers import (
     ProcedureSerializer,
     ProcedureJointSerializer,
+    ProcedureJointCreateSerializer,
     ProcedureJointInputSerializer,
     ProcedureInputSerializer,
     ProcedureOutputSerializer,
@@ -70,8 +70,10 @@ class ProcedureSiteBaseSitesViewSet(
 
     def perform_create(self, serializer):
         site = ProcedureSite.objects.filter(
-            signature=self.kwargs.get(
-                'parent_lookup_sub__signature')).first()
+            **self.get_parents_query_dict_ex(
+                ignore_prefix='sub__')
+        ).first()
+
         if not site:
             raise exceptions.NotFound()
 
@@ -82,12 +84,27 @@ class ProcedureSiteBaseSitesViewSet(
 
 
 class ProcedureViewSet(
+    NestedViewSetMixin,
     viewsets.ModelViewSet,
 ):
     filter_class = ProcedureFilterSet
     lookup_field = 'signature'
     queryset = Procedure.objects.all()
     serializer_class = ProcedureSerializer
+
+    def perform_create(self, serializer):
+        site = ProcedureSite.objects.filter(
+            **self.get_parents_query_dict_ex(
+                ignore_prefix='site__')
+        ).first()
+
+        if not site:
+            raise exceptions.NotFound()
+
+        try:
+            serializer.save(site=site)
+        except IntegrityError as e:
+            raise exceptions.NotAcceptable(str(e))
 
     def perform_destroy(self, instance):
         try:
@@ -104,11 +121,17 @@ class ProcedureJointViewSet(
     queryset = ProcedureJoint.objects.all()
     serializer_class = ProcedureJointSerializer
 
+    def get_serializer_class(self):
+        if self.action in ['create']:
+            return ProcedureJointCreateSerializer
+        return super().get_serializer_class()
+
     def perform_create(self, serializer):
         outer_procedure = Procedure.objects.filter(
-            signature=self.kwargs.get(
-                'parent_lookup_outer_procedure__signature')
+            **self.get_parents_query_dict_ex(
+                ignore_prefix='outer_procedure__')
         ).first()
+
         if not outer_procedure:
             raise exceptions.NotFound()
 
@@ -128,10 +151,8 @@ class ProcedureJointInputViewSet(
 
     def perform_create(self, serializer):
         input_joint = ProcedureJoint.objects.filter(
-            signature=self.kwargs.get(
-                'parent_lookup_joint__signature'),
-            outer_procedure__signature=self.kwargs.get(
-                'parent_lookup_joint__outer_procedure__signature'),
+            **self.get_parents_query_dict_ex(
+                ignore_prefix='joint__')
         ).first()
         if not input_joint:
             raise exceptions.NotFound()
@@ -155,8 +176,8 @@ class ProcedureInputViewSet(
 
     def perform_create(self, serializer):
         procedure = Procedure.objects.filter(
-            signature=self.kwargs.get(
-                'parent_lookup_procedure__signature')
+            **self.get_parents_query_dict_ex(
+                ignore_prefix='procedure__')
         ).first()
         if not procedure:
             raise exceptions.NotFound()
@@ -180,9 +201,10 @@ class ProcedureOutputViewSet(
 
     def perform_create(self, serializer):
         procedure = Procedure.objects.filter(
-            signature=self.kwargs.get(
-                'parent_lookup_procedure__signature')
+            **self.get_parents_query_dict_ex(
+                ignore_prefix='procedure__')
         ).first()
+
         if not procedure:
             raise exceptions.NotFound()
 
@@ -197,30 +219,24 @@ class ProcedureOutputViewSet(
     @decorators.action(
         url_name='detail',
         url_path='detail',
-        methods=['put', 'get'],
         detail=False,
         serializer_class=ProcedureOutputDetailSerializer,
     )
     def detail(self, request):
-        detail_method_name = '{}_detail'.format(request.method.lower())
-        detail_method = getattr(self, detail_method_name, None)
-        if not detail_method:
-            raise exceptions.NotFound()
-        return detail_method(request)
-
-    def put_detail(self, request):
-        instance_base = self.get_object()
-        instance = getattr(instance_base, 'detail', None)
-        serializer = self.get_serializer(
-            instance=instance, data=request.data)
-        serializer.is_valid(raise_exception=True)
-        serializer.save(output=instance_base)
-        return response.Response(serializer.data)
-
-    def get_detail(self, request):
         instance = self.get_object()
         instance = getattr(instance, 'detail', None)
         if not instance:
             raise exceptions.NotFound()
         serializer = self.get_serializer(instance=instance)
+        return response.Response(serializer.data)
+
+    @detail.mapping.put
+    def set_detail(self, request):
+        instance_base = self.get_object()
+        instance = getattr(instance_base, 'detail', None)
+        serializer = self.get_serializer(
+            instance=instance, data=request.data)
+
+        serializer.is_valid(raise_exception=True)
+        serializer.save(output=instance_base)
         return response.Response(serializer.data)

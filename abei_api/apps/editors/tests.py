@@ -83,16 +83,10 @@ class ProcedureTest(test.APITestCase):
     ]
 
     def test_create_procedure(self):
-        url_list = reverse.reverse('editors:procedures-list')
-        response = self.client.post(url_list, data={
-            'signature': 'test-procedure',
-            'docstring': 'test-procedure-doc',
-        })
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        url_list = reverse.reverse('editors:procedures-list', ['test-site-1'])
 
         response = self.client.post(url_list, data={
             'signature': 'test-procedure',
-            'site': 'test-site-1',
             'docstring': 'test-procedure-doc',
         })
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
@@ -104,34 +98,29 @@ class ProcedureTest(test.APITestCase):
 
     def test_destroy_procedure(self):
         url_detail_1 = reverse.reverse(
-            'editors:procedures-detail', ['test-procedure-1'])
+            'editors:procedures-detail', ['test-site-1', 'test-procedure-1'])
         response = self.client.delete(url_detail_1)
         self.assertEqual(response.status_code, status.HTTP_406_NOT_ACCEPTABLE)
 
         url_detail_2 = reverse.reverse(
-            'editors:procedures-detail', ['test-procedure-2'])
+            'editors:procedures-detail', ['test-site-2', 'test-procedure-2'])
         response = self.client.delete(url_detail_2)
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
 
     def test_list_procedure(self):
-        url_list = reverse.reverse('editors:procedures-list')
+        url_list = reverse.reverse('editors:procedures-list', ['test-site-1'])
         response = self.client.get(url_list)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response.data.get('count'), 3)
+        self.assertEqual(response.data.get('count'), 2)
 
         response = self.client.get(
             url_list, QUERY_STRING='signature=test-procedure-1')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data.get('count'), 1)
 
-        response = self.client.get(
-            url_list, QUERY_STRING='site=test-site-1')
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response.data.get('count'), 2)
-
     def test_update_procedure(self):
         url_detail = reverse.reverse(
-            'editors:procedures-detail', ['test-procedure-1'])
+            'editors:procedures-detail', ['test-site-1', 'test-procedure-1'])
         response = self.client.patch(url_detail, data={
             'signature': 'test-procedure-1-1',
             'docstring': 'test-procedure-doc-1-1',
@@ -144,13 +133,15 @@ class ProcedureTest(test.APITestCase):
 
     def test_retrieve_procedure(self):
         url_detail = reverse.reverse(
-            'editors:procedures-detail', ['test-procedure-1'])
+            'editors:procedures-detail', ['test-site-1', 'test-procedure-1'])
         response = self.client.get(url_detail)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
     def test_create_procedure_input(self):
         url_input_list = reverse.reverse(
-            'editors:procedure-inputs-list', ['test-procedure-1'])
+            'editors:procedure-inputs-list',
+            ['test-site-1', 'test-procedure-1']
+        )
         response = self.client.post(url_input_list, data={
             'signature': 'test-input-1',
             'index': 1,
@@ -166,7 +157,9 @@ class ProcedureTest(test.APITestCase):
 
     def test_destroy_procedure_input(self):
         url_input_detail = reverse.reverse(
-            'editors:procedure-inputs-detail', ['test-procedure-1', 0])
+            'editors:procedure-inputs-detail',
+            ['test-site-1', 'test-procedure-1', 0]
+        )
         response = self.client.delete(url_input_detail)
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
 
@@ -175,14 +168,18 @@ class ProcedureTest(test.APITestCase):
 
     def test_list_procedure_input(self):
         url_input_list = reverse.reverse(
-            'editors:procedure-inputs-list', ['test-procedure-1'])
+            'editors:procedure-inputs-list',
+            ['test-site-1', 'test-procedure-1']
+        )
         response = self.client.get(url_input_list)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data.get('count'), 1)
 
     def test_update_procedure_input(self):
         url_input_detail = reverse.reverse(
-            'editors:procedure-inputs-detail', ['test-procedure-1', 0])
+            'editors:procedure-inputs-detail',
+            ['test-site-1', 'test-procedure-1', 0]
+        )
         response = self.client.patch(url_input_detail, data={
             'index': 10,
             'signature': 'test-input-10',
@@ -194,7 +191,8 @@ class ProcedureTest(test.APITestCase):
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
         url_input_detail = reverse.reverse(
-            'editors:procedure-inputs-detail', ['test-procedure-1', 10])
+            'editors:procedure-inputs-detail',
+            ['test-site-1', 'test-procedure-1', 10])
         response = self.client.get(url_input_detail)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data.get('index'), 10)
@@ -207,9 +205,12 @@ class ProcedureJointTest(test.APITestCase):
 
     def test_create_joint(self):
         url_list = reverse.reverse(
-            'editors:procedure-joints-list', ['test-procedure-2'])
+            'editors:procedure-joints-list',
+            ['test-site-2', 'test-procedure-2']
+        )
         response = self.client.post(url_list, data={
             'signature': 'test-joint-1',
+            'site': 'test-site-1',
             'procedure': 'test-procedure-1',
         })
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
@@ -222,6 +223,7 @@ class ProcedureJointTest(test.APITestCase):
 
     def test_destroy_joint(self):
         url_detail = reverse.reverse('editors:procedure-joints-detail', [
+            'test-site-2',
             'test-procedure-2',
             'test-procedure-2-joint-1',
         ])
@@ -230,13 +232,16 @@ class ProcedureJointTest(test.APITestCase):
 
     def test_list_joint(self):
         url_list = reverse.reverse(
-            'editors:procedure-joints-list', ['test-procedure-2'])
+            'editors:procedure-joints-list',
+            ['test-site-2', 'test-procedure-2'],
+        )
         response = self.client.get(url_list)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data.get('count'), 1)
 
     def test_update_joint(self):
         url_detail = reverse.reverse('editors:procedure-joints-detail', [
+            'test-site-2',
             'test-procedure-2',
             'test-procedure-2-joint-1',
         ])
@@ -245,13 +250,14 @@ class ProcedureJointTest(test.APITestCase):
             'signature': 'test-procedure-2-joint-0',
         })
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(
+        self.assertNotEqual(
             response.data.get('procedure'), 'test-procedure-3')
         self.assertEqual(
             response.data.get('signature'), 'test-procedure-2-joint-0')
 
     def test_retrieve_joint(self):
         url_detail = reverse.reverse('editors:procedure-joints-detail', [
+            'test-site-2',
             'test-procedure-2',
             'test-procedure-2-joint-1',
         ])
@@ -264,6 +270,7 @@ class ProcedureJointTest(test.APITestCase):
 
     def test_create_joint_input(self):
         url_list = reverse.reverse('editors:procedure-joint-inputs-list', [
+            'test-site-2',
             'test-procedure-2',
             'test-procedure-2-joint-1',
         ])
@@ -292,7 +299,9 @@ class ProcedureJointTest(test.APITestCase):
 
     def test_destroy_joint_input(self):
         url_detail = reverse.reverse(
-            'editors:procedure-joint-inputs-detail', [
+            'editors:procedure-joint-inputs-detail',
+            [
+                'test-site-2',
                 'test-procedure-2',
                 'test-procedure-2-joint-1',
                 0,
@@ -303,6 +312,7 @@ class ProcedureJointTest(test.APITestCase):
 
     def test_list_joint_input(self):
         url_list = reverse.reverse('editors:procedure-joint-inputs-list', [
+            'test-site-2',
             'test-procedure-2',
             'test-procedure-2-joint-1',
         ])
@@ -318,6 +328,7 @@ class ProcedureOutputTest(test.APITestCase):
 
     def test_create_output(self):
         url_list = reverse.reverse('editors:procedure-outputs-list', [
+            'test-site-2',
             'test-procedure-2',
         ])
         response = self.client.post(url_list, data={
@@ -331,13 +342,16 @@ class ProcedureOutputTest(test.APITestCase):
 
     def test_destroy_output(self):
         url_detail = reverse.reverse('editors:procedure-outputs-detail', [
-            'test-procedure-2', 0,
+            'test-site-2',
+            'test-procedure-2',
+            0,
         ])
         response = self.client.delete(url_detail)
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
 
     def test_list_output(self):
         url_list = reverse.reverse('editors:procedure-outputs-list', [
+            'test-site-2',
             'test-procedure-2',
         ])
         response = self.client.get(url_list)
@@ -346,7 +360,9 @@ class ProcedureOutputTest(test.APITestCase):
 
     def test_update_output(self):
         url_detail = reverse.reverse('editors:procedure-outputs-detail', [
-            'test-procedure-2', 0,
+            'test-site-2',
+            'test-procedure-2',
+            0,
         ])
         response = self.client.patch(url_detail, data={
             'signature': 'test-procedure-2-output-3',
@@ -359,7 +375,9 @@ class ProcedureOutputTest(test.APITestCase):
 
     def test_retrieve_output(self):
         url_detail = reverse.reverse('editors:procedure-outputs-detail', [
-            'test-procedure-2', 0,
+            'test-site-2',
+            'test-procedure-2',
+            0,
         ])
         response = self.client.get(url_detail)
         self.assertEqual(response.status_code, status.HTTP_200_OK)

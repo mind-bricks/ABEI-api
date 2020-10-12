@@ -1,10 +1,29 @@
 [
   {
+    "model": "editors.proceduresite",
+    "pk": 1,
+    "fields": {
+      "signature": "builtin",
+      "base_sites": []
+    }
+  },
+  {
+    "model": "editors.proceduresite",
+    "pk": 2,
+    "fields": {
+      "signature": "test-site-1",
+      "base_sites": [
+        1
+      ]
+    }
+  },
+  {
     "model": "editors.procedure",
     "pk": 1,
     "fields": {
       "signature": "test-procedure-1",
-      "docstring": "test-procedure-doc-1"
+      "docstring": "test-procedure-doc-1",
+      "site": 2
     }
   },
   {
@@ -12,7 +31,8 @@
     "pk": 2,
     "fields": {
       "signature": "float@py:add@py",
-      "docstring": "native add"
+      "docstring": "native add",
+      "site": 1
     }
   },
   {
@@ -20,7 +40,8 @@
     "pk": 3,
     "fields": {
       "signature": "float@py:mul@py",
-      "docstring": "native multiply"
+      "docstring": "native multiply",
+      "site": 1
     }
   },
   {

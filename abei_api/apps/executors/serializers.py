@@ -3,6 +3,7 @@ import json
 from django.apps import apps
 from django.utils import timezone
 from rest_framework import (
+    exceptions,
     serializers,
 )
 
@@ -17,9 +18,13 @@ from .tasks import (
 
 
 class ProcedureRunSerializer(serializers.ModelSerializer):
-    procedure = serializers.SlugRelatedField(
-        slug_field='signature',
-        queryset=apps.get_model('editors.Procedure').objects.all(),
+    site = serializers.CharField(
+        source='procedure.site.signature',
+        read_only=True,
+    )
+    procedure = serializers.CharField(
+        source='procedure.signature',
+        read_only=True,
     )
     outputs = serializers.SerializerMethodField()
 
@@ -27,6 +32,7 @@ class ProcedureRunSerializer(serializers.ModelSerializer):
         model = ProcedureRun
         fields = [
             'uuid',
+            'site',
             'procedure',
             'status',
             'created_time',
@@ -38,7 +44,6 @@ class ProcedureRunSerializer(serializers.ModelSerializer):
             'status',
             'created_time',
             'finished_time',
-            'outputs',
         ]
 
     @staticmethod
@@ -52,6 +57,12 @@ class ProcedureRunSerializer(serializers.ModelSerializer):
 
 
 class ProcedureRunCreateSerializer(ProcedureRunSerializer):
+    site = serializers.CharField(
+        source='procedure.site.signature',
+    )
+    procedure = serializers.CharField(
+        source='procedure.signature',
+    )
     inputs = serializers.ListField(
         write_only=True,
         required=False,
@@ -62,6 +73,20 @@ class ProcedureRunCreateSerializer(ProcedureRunSerializer):
             'inputs',
             *ProcedureRunSerializer.Meta.fields
         ]
+
+    def validate(self, attrs):
+        # get procedure instance
+        procedure = attrs['procedure']
+        procedure = apps.get_model('editors.Procedure').objects.filter(
+            site__signature=procedure['site']['signature'],
+            signature=procedure['signature'],
+        ).first()
+        if not procedure:
+            raise exceptions.ValidationError('invalid procedure')
+
+        # update procedure attribute
+        attrs['procedure'] = procedure
+        return attrs
 
 
 class ProcedureRunCreateSyncSerializer(ProcedureRunCreateSerializer):

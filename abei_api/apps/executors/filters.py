@@ -9,8 +9,11 @@ from .models import (
 
 
 class ProcedureRunFilterSet(filterset.FilterSet):
-    procedure = filters.UUIDFilter(
-        field_name='procedure__uuid',
+    site = filters.CharFilter(
+        field_name='procedure__site__signature',
+    )
+    procedure = filters.CharFilter(
+        field_name='procedure__signature',
     )
     created_time = filters.IsoDateTimeFromToRangeFilter()
     finished_time = filters.IsoDateTimeFromToRangeFilter()
@@ -18,6 +21,7 @@ class ProcedureRunFilterSet(filterset.FilterSet):
     class Meta:
         model = ProcedureRun
         fields = [
+            'site',
             'procedure',
             'status',
             'created_time',

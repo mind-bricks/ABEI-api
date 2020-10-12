@@ -36,7 +36,7 @@ class ProcedureSiteRelationship(models.Model):
 class Procedure(models.Model):
     signature = models.CharField(
         max_length=128,
-        unique=True,
+        # unique=True,
     )
     docstring = models.TextField(
         blank=True,
@@ -49,6 +49,11 @@ class Procedure(models.Model):
         related_name='procedures',
         on_delete=models.PROTECT,
     )
+
+    class Meta:
+        unique_together = [
+            ('site', 'signature'),
+        ]
 
 
 class ProcedureJoint(models.Model):

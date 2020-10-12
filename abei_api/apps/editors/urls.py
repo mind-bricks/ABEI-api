@@ -29,34 +29,45 @@ router_site.register(
     basename='site-base-sites',
     parents_query_lookups=['sub__signature'],
 )
-router_procedure = router.register(
+router_procedure = router_site.register(
     r'procedures',
     ProcedureViewSet,
     basename='procedures',
+    parents_query_lookups=['site__signature'],
 )
 router_procedure.register(
     r'inputs',
     ProcedureInputViewSet,
     basename='procedure-inputs',
-    parents_query_lookups=['procedure__signature'],
+    parents_query_lookups=[
+        'procedure__site__signature',
+        'procedure__signature',
+    ],
 )
 router_procedure.register(
     r'outputs',
     ProcedureOutputViewSet,
     basename='procedure-outputs',
-    parents_query_lookups=['procedure__signature'],
+    parents_query_lookups=[
+        'procedure__site__signature',
+        'procedure__signature'
+    ],
 )
 router_joints = router_procedure.register(
     r'joints',
     ProcedureJointViewSet,
     basename='procedure-joints',
-    parents_query_lookups=['outer_procedure__signature'],
+    parents_query_lookups=[
+        'outer_procedure__site__signature',
+        'outer_procedure__signature',
+    ],
 )
 router_joints.register(
     r'inputs',
     ProcedureJointInputViewSet,
     basename='procedure-joint-inputs',
     parents_query_lookups=[
+        'joint__outer_procedure__site__signature',
         'joint__outer_procedure__signature',
         'joint__signature',
     ],

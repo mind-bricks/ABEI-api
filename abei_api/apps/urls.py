@@ -7,7 +7,7 @@ from rest_framework_swagger.views import (
 )
 
 urlpatterns = [
-    path('editors/', include('apps.editors.urls')),
-    path('executors/', include('apps.executors.urls')),
-    path('documents/', get_swagger_view(title='ABEI API')),
+    path('', include('apps.editors.urls')),
+    path('', include('apps.executors.urls')),
+    path('swagger/', get_swagger_view(title='ABEI API')),
 ]

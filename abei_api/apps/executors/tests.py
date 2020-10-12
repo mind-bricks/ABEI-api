@@ -15,15 +15,18 @@ class ProcedureRunTest(test.APITestCase):
     def test_create_procedure_run(self):
         url_run_list = reverse.reverse('executors:runs-list')
         response = self.client.post(url_run_list, data={
+            'site': 'test-site-1',
             'procedure': 'test-procedure-1',
         })
         self.assertEqual(
             response.status_code, status.HTTP_400_BAD_REQUEST)
 
         response = self.client.post(url_run_list, data={
+            'site': 'test-site-1',
             'procedure': 'test-procedure-1',
             'inputs': [3.0, 4.0],
         })
+        print(response.data)
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertListEqual(response.data.get('outputs'), [19.0, 84.0])
         run_uuid = response.data.get('uuid')
