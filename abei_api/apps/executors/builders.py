@@ -25,7 +25,8 @@ class ProcedureBuilder(object):
             _(IProcedureSiteFactory)
         )
         self.site_cache = {}
-        self.site_default = self.site_factory.create(None)
+        self.site_default = self.site_factory.create(
+            None, builtin=True)
 
     def load_model_site(self, site, clear=False):
         if clear:
@@ -38,10 +39,17 @@ class ProcedureBuilder(object):
         if site_object:
             return site_object
 
-        site_object = self.site_factory.create([
+        site_builtin = bool(site.signature == 'builtin')
+        site_bases = [
             self.load_model_site(site)
             for site in site.base_sites.all()
-        ])
+        ]
+        assert not (site_builtin and site_bases)
+
+        site_object = self.site_factory.create(
+            site_bases,
+            builtin=site_builtin,
+        )
         self.site_cache[site.signature] = site_object
         return site_object
 
@@ -75,7 +83,8 @@ class ProcedureBuilder(object):
             clear=clear,
         )
         procedure_object = site_object.query_procedure(
-            procedure.signature
+            procedure.signature,
+            depth=0,
         )
         if procedure_object:
             return procedure_object

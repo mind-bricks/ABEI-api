@@ -10,6 +10,18 @@ class ProcedureSiteTest(test.APITestCase):
         'test_editors.json',
     ]
 
+    def test_init_site(self):
+        # init api will generate builtin site and procedures
+        url_init = reverse.reverse('editors:sites-init')
+        response = self.client.post(url_init)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        # check if builtin site and procedures have been generated
+        url_list = reverse.reverse('editors:procedures-list', ['builtin'])
+        response = self.client.get(url_list)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertGreater(response.data.get('count'), 0)
+
     def test_create_site(self):
         url_create = reverse.reverse('editors:sites-list')
         response = self.client.post(

@@ -9,13 +9,12 @@ from rest_framework import (
 )
 
 from ..mixins import (
-    NestedViewSetMixin,
+    NestedViewSetMixin
 )
 from .filters import (
     ProcedureSiteFilterSet,
     ProcedureFilterSet,
 )
-
 from .models import (
     Procedure,
     ProcedureJoint,
@@ -37,6 +36,7 @@ from .serializers import (
     ProcedureSiteSerializer,
     ProcedureSiteBaseSitesSerializer,
 )
+from .utils import init_sites
 
 
 class ProcedureSiteViewSet(
@@ -55,6 +55,14 @@ class ProcedureSiteViewSet(
             instance.delete()
         except ProtectedError as e:
             raise exceptions.NotAcceptable(str(e))
+
+    @decorators.action(
+        methods=['post'],
+        detail=False,
+    )
+    def init(self, request, *args, **kwargs):
+        init_sites()
+        return response.Response()
 
 
 class ProcedureSiteBaseSitesViewSet(

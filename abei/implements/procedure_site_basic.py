@@ -123,6 +123,8 @@ class ProcedureSiteFactory(IProcedureSiteFactory):
             site.register_procedure(p)
         return site
 
-    def create(self, procedure_sites, **kwargs):
-        return ProcedureSiteBasic(
+    def create(self, procedure_sites, builtin=False, **kwargs):
+        assert not (procedure_sites and builtin)
+
+        return self.builtin_site if builtin else ProcedureSiteBasic(
             procedure_sites=procedure_sites or [self.builtin_site])
