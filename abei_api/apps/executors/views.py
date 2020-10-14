@@ -1,4 +1,6 @@
+from django.apps import apps
 from rest_framework import (
+    exceptions,
     decorators,
     mixins,
     response,
@@ -6,20 +8,37 @@ from rest_framework import (
     viewsets,
 )
 
+from ..mixins import NestedViewSetMixin
+
 from .filters import (
     ProcedureRunFilterSet,
+    ProcedureRunLogFilterSet,
 )
 from .models import (
     ProcedureRun,
 )
 from .serializers import (
     ProcedureRunSerializer,
+    ProcedureRunLogSerializer,
     ProcedureRunCreateSyncSerializer,
     ProcedureRunCreateASyncSerializer,
 )
 
 
+class ProcedureSiteViewSet(viewsets.GenericViewSet):
+    """
+    viewset that do nothing
+    """
+
+
+class ProcedureViewSet(viewsets.GenericViewSet):
+    """
+    viewset that do nothing
+    """
+
+
 class ProcedureRunViewSet(
+    NestedViewSetMixin,
     mixins.CreateModelMixin,
     mixins.ListModelMixin,
     mixins.RetrieveModelMixin,
@@ -40,6 +59,17 @@ class ProcedureRunViewSet(
             super().get_serializer_class()
         )
 
+    def get_procedure(self):
+        procedure = apps.get_model('editors.Procedure').objects.filter(
+            **self.get_parents_query_dict_ex(ignore_prefix='procedure__')
+        ).first()
+        if not procedure:
+            raise exceptions.NotFound('invalid procedure')
+        return procedure
+
+    def perform_create(self, serializer):
+        return serializer.save(procedure=self.get_procedure())
+
     @decorators.action(
         methods=['post'],
         url_name='async',
@@ -49,6 +79,18 @@ class ProcedureRunViewSet(
     def create_async(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        serializer.save()
+        serializer.save(procedure=self.get_procedure())
+
         return response.Response(
             serializer.data, status=status.HTTP_201_CREATED)
+
+
+class ProcedureRunLogViewSet(
+    mixins.ListModelMixin,
+    mixins.RetrieveModelMixin,
+    viewsets.GenericViewSet,
+):
+    filter_class = ProcedureRunLogFilterSet
+    lookup_field = 'uuid'
+    queryset = ProcedureRun.objects.all()
+    serializer_class = ProcedureRunLogSerializer

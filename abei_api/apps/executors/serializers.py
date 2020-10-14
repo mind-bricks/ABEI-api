@@ -1,9 +1,8 @@
 import json
 
-from django.apps import apps
 from django.utils import timezone
 from rest_framework import (
-    exceptions,
+    # exceptions,
     serializers,
 )
 
@@ -18,22 +17,14 @@ from .tasks import (
 
 
 class ProcedureRunSerializer(serializers.ModelSerializer):
-    site = serializers.CharField(
-        source='procedure.site.signature',
-        read_only=True,
-    )
-    procedure = serializers.CharField(
-        source='procedure.signature',
-        read_only=True,
-    )
     outputs = serializers.SerializerMethodField()
 
     class Meta:
         model = ProcedureRun
         fields = [
             'uuid',
-            'site',
-            'procedure',
+            # 'site',
+            # 'procedure',
             'status',
             'created_time',
             'finished_time',
@@ -56,13 +47,25 @@ class ProcedureRunSerializer(serializers.ModelSerializer):
             return None
 
 
-class ProcedureRunCreateSerializer(ProcedureRunSerializer):
+class ProcedureRunLogSerializer(ProcedureRunSerializer):
     site = serializers.CharField(
         source='procedure.site.signature',
+        read_only=True,
     )
     procedure = serializers.CharField(
         source='procedure.signature',
+        read_only=True,
     )
+
+    class Meta(ProcedureRunSerializer.Meta):
+        fields = [
+            'site',
+            'procedure',
+            *ProcedureRunSerializer.Meta.fields,
+        ]
+
+
+class ProcedureRunCreateSerializer(ProcedureRunSerializer):
     inputs = serializers.ListField(
         write_only=True,
         required=False,
@@ -71,22 +74,8 @@ class ProcedureRunCreateSerializer(ProcedureRunSerializer):
     class Meta(ProcedureRunSerializer.Meta):
         fields = [
             'inputs',
-            *ProcedureRunSerializer.Meta.fields
+            *ProcedureRunSerializer.Meta.fields,
         ]
-
-    def validate(self, attrs):
-        # get procedure instance
-        procedure = attrs['procedure']
-        procedure = apps.get_model('editors.Procedure').objects.filter(
-            site__signature=procedure['site']['signature'],
-            signature=procedure['signature'],
-        ).first()
-        if not procedure:
-            raise exceptions.ValidationError('invalid procedure')
-
-        # update procedure attribute
-        attrs['procedure'] = procedure
-        return attrs
 
 
 class ProcedureRunCreateSyncSerializer(ProcedureRunCreateSerializer):

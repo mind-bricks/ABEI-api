@@ -1,6 +1,9 @@
 #!/usr/bin/env python
 
+import os
 import re
+
+os.chdir(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 try:
     from setuptools import setup
@@ -15,7 +18,7 @@ with open('abei/__init__.py', 'r') as fd:
 if not version:
     raise RuntimeError('Cannot find version information')
 
-with open('README.rst', 'rb') as f:
+with open('abei/README.md', 'rb') as f:
     readme = f.read().decode('utf-8')
 
 setup(
@@ -23,7 +26,11 @@ setup(
     version=version,
     description='Library for Functional Graphic Programming',
     long_description=readme,
-    packages=['abei'],
+    packages=[
+        'abei',
+        'abei.interfaces',
+        'abei.implements',
+    ],
     install_requires=[],
     include_package_data=True,
     url='https://www.mind-bricks.com',
@@ -34,6 +41,7 @@ setup(
         'Operating System :: OS Independent',
         'Programming Language :: Python :: 3.5',
         'Programming Language :: Python :: 3.6',
-        'Framework :: Django',
+        'Programming Language :: Python :: 3.7',
+        'Programming Language :: Python :: 3.8',
     ],
 )

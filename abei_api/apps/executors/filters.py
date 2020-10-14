@@ -9,21 +9,29 @@ from .models import (
 
 
 class ProcedureRunFilterSet(filterset.FilterSet):
-    site = filters.CharFilter(
-        field_name='procedure__site__signature',
-    )
-    procedure = filters.CharFilter(
-        field_name='procedure__signature',
-    )
     created_time = filters.IsoDateTimeFromToRangeFilter()
     finished_time = filters.IsoDateTimeFromToRangeFilter()
 
     class Meta:
         model = ProcedureRun
         fields = [
-            'site',
-            'procedure',
             'status',
             'created_time',
             'finished_time',
+        ]
+
+
+class ProcedureRunLogFilterSet(ProcedureRunFilterSet):
+    site = filters.CharFilter(
+        field_name='procedure__site__signature',
+    )
+    procedure = filters.CharFilter(
+        field_name='procedure__signature',
+    )
+
+    class Meta(ProcedureRunFilterSet.Meta):
+        fields = [
+            'site',
+            'procedure',
+            *ProcedureRunFilterSet.Meta.fields,
         ]
