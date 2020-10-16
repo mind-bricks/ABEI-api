@@ -1,10 +1,10 @@
 # basic ---------------------------------------------------------------------
-#- entries:
-#    - interface: abei.interfaces.IStorage
-#      name: yml
-#    - interface: abei.interfaces.IStorage
-#      name:
-#  class: abei.implements.storage_yml_file.Storage
+- entries:
+    - interface: abei.interfaces.IStorage
+      name: yml
+    - interface: abei.interfaces.IStorage
+      name:
+  class: abei.implements.storage_yml_file.Storage
 
 #- entries:
 #    - interface: abei.interfaces.IService

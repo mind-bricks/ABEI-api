@@ -32,6 +32,15 @@ class ProcedureSiteTest(test.APITestCase):
         self.assertGreater(response.data.get('count'), 0)
 
     @test.authentication_mock(
+        access_token='BuiltinAccessToken',
+    )
+    def test_init_site_by_builtin_user(self):
+        # init api will generate builtin site and procedures
+        url_init = reverse.reverse('editors:sites-init')
+        response = self.client.post(url_init)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+    @test.authentication_mock(
         user_uuid=uuid_of_user,
         user_scopes=[scope_of_users]
     )

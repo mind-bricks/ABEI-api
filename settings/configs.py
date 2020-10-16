@@ -33,6 +33,7 @@ INSTALLED_APPS = [
     'django_filters',
     'rest_framework_swagger',
     'rest_framework',
+
     'apps.apps.AppConfig4Editors',
     'apps.apps.AppConfig4Executors',
     'apps.apps.AppConfig4Users',
@@ -101,6 +102,7 @@ FIXTURE_DIRS = [
     os.path.join(BASE_DIR, 'fixtures'),
 ]
 
+# Django Rest Framework
 REST_FRAMEWORK = {
     'UNAUTHENTICATED_USER':
         'apps.authentication.AnonymousUser',
@@ -124,4 +126,10 @@ REST_FRAMEWORK = {
     'DEFAULT_PAGINATION_CLASS':
         'rest_framework.pagination.LimitOffsetPagination',
     'PAGE_SIZE': 100,
+}
+
+# Swagger
+SWAGGER_SETTINGS = {
+    'USE_SESSION_AUTH': False,
+    'SECURITY_DEFINITIONS': {},
 }

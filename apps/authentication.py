@@ -1,6 +1,16 @@
+from uuid import UUID
+
+from abei.interfaces import (
+    IStorage,
+    service_entry as _,
+)
 from django.apps import apps
+from django.utils.functional import cached_property
 from mb_drf_extensions import authentication
 
+from .settings import (
+    default_service_site
+)
 from .scopes import (
     scope_of_admin,
     scope_of_users,
@@ -38,6 +48,34 @@ class AuthenticatedUser(authentication.AuthenticatedUser):
 
 
 class BearerAuthentication(authentication.BearerAuthentication):
+    """
+    customized bearer authentication
+    """
+
+    @cached_property
+    def builtin_user(self):
+        storage = default_service_site.get_service(_(IStorage))
+        access_token = storage.get_value('builtin-user:access_token')
+        if not access_token:
+            return None
+
+        username = storage.get_value('builtin-user:username') or 'Builtin'
+        return {
+            'uuid': str(UUID(int=1)),
+            'username': username,
+            'scopes': [scope_of_users],
+            'access_token': access_token,
+        }
+
+    def get_user_by_access_token(self, access_token):
+        if (
+                self.builtin_user and
+                self.builtin_user['access_token'] == access_token
+        ):
+            return self.builtin_user
+
+        return super().get_user_by_access_token(access_token)
+
     def compose_user(self, user, access_token):
         return AuthenticatedUser(
             user,

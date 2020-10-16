@@ -8,7 +8,6 @@ https://docs.djangoproject.com/en/2.2/howto/deployment/wsgi/
 """
 
 import os
-import abei.interfaces
 from django.core.wsgi import get_wsgi_application
 
 cwd = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
