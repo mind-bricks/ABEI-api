@@ -55,26 +55,30 @@ class BearerAuthentication(authentication.BearerAuthentication):
     @cached_property
     def builtin_user(self):
         storage = default_service_site.get_service(_(IStorage))
-        access_token = storage.get_value('builtin-user:access_token')
+        access_token = storage.get_value(
+            'builtin-user:access_token')
+
         if not access_token:
             return None
 
-        username = storage.get_value('builtin-user:username') or 'Builtin'
-        return {
+        username = storage.get_value(
+            'builtin-user:username') or 'Builtin'
+
+        return AuthenticatedUser({
             'uuid': str(UUID(int=1)),
             'username': username,
             'scopes': [scope_of_users],
-            'access_token': access_token,
-        }
+        }, access_token=access_token)
 
-    def get_user_by_access_token(self, access_token):
-        if (
-                self.builtin_user and
-                self.builtin_user['access_token'] == access_token
-        ):
-            return self.builtin_user
+    def authenticate(self, request):
+        instance = super().authenticate(request)
+        if not instance and self.builtin_user:
+            return (
+                self.builtin_user,
+                self.builtin_user.access_token,
+            )
 
-        return super().get_user_by_access_token(access_token)
+        return instance
 
     def compose_user(self, user, access_token):
         return AuthenticatedUser(
