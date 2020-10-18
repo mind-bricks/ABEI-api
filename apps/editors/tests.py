@@ -89,7 +89,7 @@ class ProcedureSiteTest(test.APITestCase):
         user_uuid=uuid_of_user,
         user_scopes=[scope_of_users]
     )
-    def test_create_sub_sites(self):
+    def test_create_base_sites(self):
         url_base_sites = reverse.reverse(
             'editors:site-base-sites-list', ['test-site-3'])
         response = self.client.post(
@@ -105,7 +105,7 @@ class ProcedureSiteTest(test.APITestCase):
         user_uuid=uuid_of_user,
         user_scopes=[scope_of_users]
     )
-    def test_list_sub_sites(self):
+    def test_list_base_sites(self):
         url_base_sites = reverse.reverse(
             'editors:site-base-sites-list', ['test-site-3'])
         response = self.client.get(url_base_sites)
@@ -116,7 +116,26 @@ class ProcedureSiteTest(test.APITestCase):
         user_uuid=uuid_of_user,
         user_scopes=[scope_of_users]
     )
-    def test_destroy_sub_sites(self):
+    def test_retrieve_base_site(self):
+        url_base_sites = reverse.reverse('editors:site-base-sites-detail', [
+            'test-site-3',
+            'test-site-1',
+        ])
+        response = self.client.get(url_base_sites)
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+        url_base_sites = reverse.reverse('editors:site-base-sites-detail', [
+            'test-site-3',
+            'test-site-2',
+        ])
+        response = self.client.get(url_base_sites)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+    @test.authentication_mock(
+        user_uuid=uuid_of_user,
+        user_scopes=[scope_of_users]
+    )
+    def test_destroy_base_site(self):
         url_base_sites = reverse.reverse(
             'editors:site-base-sites-detail', ['test-site-3', 'test-site-2'])
         response = self.client.delete(url_base_sites)
