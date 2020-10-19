@@ -187,7 +187,7 @@ class ProcedureTest(test.APITestCase):
             'docstring': 'test-procedure-doc',
         })
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        self.assertIn('joints', response.data)
+        # self.assertIn('joints', response.data)
         self.assertIn('inputs', response.data)
         self.assertIn('outputs', response.data)
         self.assertEqual(response.data.get('signature'), 'test-procedure')

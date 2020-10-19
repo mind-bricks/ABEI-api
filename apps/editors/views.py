@@ -53,6 +53,7 @@ class ProcedureSiteViewSet(
     mixins.CreateModelMixin,
     mixins.DestroyModelMixin,
     mixins.ListModelMixin,
+    mixins.RetrieveModelMixin,
     viewsets.GenericViewSet,
 ):
     filter_class = ProcedureSiteFilterSet

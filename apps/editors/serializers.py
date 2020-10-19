@@ -237,11 +237,11 @@ class ProcedureSerializer(serializers.ModelSerializer):
         read_only=True,
     )
 
-    joints = serializers.SlugRelatedField(
-        many=True,
-        slug_field='signature',
-        read_only=True,
-    )
+    # joints = serializers.SlugRelatedField(
+    #     many=True,
+    #     slug_field='signature',
+    #     read_only=True,
+    # )
 
     site = serializers.SlugRelatedField(
         slug_field='signature',
@@ -255,14 +255,14 @@ class ProcedureSerializer(serializers.ModelSerializer):
             'docstring',
             'inputs',
             'outputs',
-            'joints',
+            # 'joints',
             'site',
             'editable',
         ]
         read_only_fields = [
             'inputs',
             'outputs',
-            'joints',
+            # 'joints',
             'site',
             'editable',
         ]

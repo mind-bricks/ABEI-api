@@ -29,6 +29,7 @@ ALLOWED_HOSTS = ['*']
 # Application definition
 
 INSTALLED_APPS = [
+    'corsheaders',
     'django.contrib.staticfiles',
     'django_filters',
     'rest_framework_swagger',
@@ -40,6 +41,7 @@ INSTALLED_APPS = [
 ]
 
 MIDDLEWARE = [
+    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -101,6 +103,9 @@ STATIC_URL = '/static/'
 FIXTURE_DIRS = [
     os.path.join(BASE_DIR, 'fixtures'),
 ]
+
+# CORS Headers
+CORS_ORIGIN_ALLOW_ALL = True
 
 # Django Rest Framework
 REST_FRAMEWORK = {
