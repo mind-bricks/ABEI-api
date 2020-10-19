@@ -253,8 +253,16 @@ class ProcedureSerializer(serializers.ModelSerializer):
         fields = [
             'signature',
             'docstring',
-            'joints',
             'inputs',
             'outputs',
+            'joints',
             'site',
+            'editable',
+        ]
+        read_only_fields = [
+            'inputs',
+            'outputs',
+            'joints',
+            'site',
+            'editable',
         ]

@@ -29,7 +29,10 @@ def init_sites(user):
         procedure_instance, __ = Procedure.objects.get_or_create(
             signature=procedure_signature,
             site=site_instance,
-            defaults={'docstring': procedure.get_docstring()},
+            defaults={
+                'editable': False,
+                'docstring': procedure.get_docstring(),
+            },
         )
 
         for i, input_signature in enumerate(

@@ -6,6 +6,7 @@ from rest_framework import (
     decorators,
     exceptions,
     mixins,
+    permissions,
     response,
     viewsets,
 )
@@ -141,8 +142,13 @@ class ProcedureViewSet(
     serializer_class = ProcedureSerializer
 
     def get_queryset(self):
-        return super().get_queryset().filter(
+        qs = super().get_queryset().filter(
             site__user__uuid=self.request.user.uuid)
+
+        if self.request.method in permissions.SAFE_METHODS:
+            return qs
+
+        return qs.filter(editable=True)
 
     def perform_create(self, serializer):
         site = ProcedureSite.objects.filter(
@@ -176,9 +182,13 @@ class ProcedureJointViewSet(
     serializer_class = ProcedureJointSerializer
 
     def get_queryset(self):
-        return super().get_queryset().filter(
+        qs = super().get_queryset().filter(
             outer_procedure__site__user__uuid=self.request.user.uuid
         )
+        if self.request.method in permissions.SAFE_METHODS:
+            return qs
+
+        return qs.filter(outer_procedure__editable=True)
 
     def get_serializer_class(self):
         if self.action in ['create']:
@@ -188,6 +198,7 @@ class ProcedureJointViewSet(
     def perform_create(self, serializer):
         outer_procedure = Procedure.objects.filter(
             site__user__uuid=self.request.user.uuid,
+            editable=True,
             **self.get_parents_query_dict_ex(
                 ignore_prefix='outer_procedure__')
         ).first()
@@ -217,9 +228,13 @@ class ProcedureJointInputViewSet(
     serializer_class = ProcedureJointInputSerializer
 
     def get_queryset(self):
-        return super().get_queryset().filter(
-            joint__outer_procedure__site__user__uuid=self.request.user.uuid
-        )
+        qs = super().get_queryset().filter(
+            joint__outer_procedure__site__user__uuid=self.request.user.uuid)
+
+        if self.request.method in permissions.SAFE_METHODS:
+            return qs
+
+        return qs.filter(joint__outer_procedure__editable=True)
 
     def get_serializer_class(self):
         if self.action in ['create']:
@@ -229,6 +244,7 @@ class ProcedureJointInputViewSet(
     def perform_create(self, serializer):
         joint = ProcedureJoint.objects.filter(
             outer_procedure__site__user__uuid=self.request.user.uuid,
+            outer_procedure__editable=True,
             **self.get_parents_query_dict_ex(
                 ignore_prefix='joint__'),
         ).select_related('outer_procedure').first()
@@ -256,12 +272,18 @@ class ProcedureInputViewSet(
     serializer_class = ProcedureInputSerializer
 
     def get_queryset(self):
-        return super().get_queryset().filter(
+        qs = super().get_queryset().filter(
             procedure__site__user__uuid=self.request.user.uuid)
+
+        if self.request.method in permissions.SAFE_METHODS:
+            return qs
+
+        return qs.filter(procedure__editable=True)
 
     def perform_create(self, serializer):
         procedure = Procedure.objects.filter(
             site__user__uuid=self.request.user.uuid,
+            editable=True,
             **self.get_parents_query_dict_ex(
                 ignore_prefix='procedure__')
         ).first()
@@ -288,12 +310,18 @@ class ProcedureOutputViewSet(
     serializer_class = ProcedureOutputSerializer
 
     def get_queryset(self):
-        return super().get_queryset().filter(
+        qs = super().get_queryset().filter(
             procedure__site__user__uuid=self.request.user.uuid)
+
+        if self.request.method in permissions.SAFE_METHODS:
+            return qs
+
+        return qs.filter(procedure__editable=True)
 
     def perform_create(self, serializer):
         procedure = Procedure.objects.filter(
             site__user__uuid=self.request.user.uuid,
+            editable=True,
             **self.get_parents_query_dict_ex(
                 ignore_prefix='procedure__')
         ).first()

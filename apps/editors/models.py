@@ -59,6 +59,9 @@ class Procedure(models.Model):
         related_name='procedures',
         on_delete=models.PROTECT,
     )
+    editable = models.BooleanField(
+        default=True,
+    )
 
     class Meta:
         unique_together = [
