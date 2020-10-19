@@ -41,6 +41,7 @@ from .serializers import (
     ProcedureOutputSerializer,
     ProcedureOutputDetailSerializer,
     ProcedureSiteSerializer,
+    ProcedureSiteCreateSerializer,
     ProcedureSiteBaseSitesSerializer,
     ProcedureSiteBaseSitesCreateSerializer,
 )
@@ -62,6 +63,11 @@ class ProcedureSiteViewSet(
     def get_queryset(self):
         return super().get_queryset().filter(
             user__uuid=self.request.user.uuid)
+
+    def get_serializer_class(self):
+        if self.action in ['create']:
+            return ProcedureSiteCreateSerializer
+        return super().get_serializer_class()
 
     def perform_create(self, serializer):
         serializer.save(user=self.request.user.user_persist())

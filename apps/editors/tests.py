@@ -56,6 +56,28 @@ class ProcedureSiteTest(test.APITestCase):
         user_uuid=uuid_of_user,
         user_scopes=[scope_of_users]
     )
+    def test_create_site_with_dependencies(self):
+        url_create = reverse.reverse('editors:sites-list')
+        response = self.client.post(url_create, data={
+            'signature': 'basic',
+            'base_sites': [
+                {'signature': 'test-site-0'},
+                {'signature': 'test-site-1'},
+            ]
+        }, format='json')
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(response.data.get('signature'), 'basic')
+
+        url_base_sites = reverse.reverse(
+            'editors:site-base-sites-list', ['basic'])
+        response = self.client.get(url_base_sites)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data.get('count'), 1)
+
+    @test.authentication_mock(
+        user_uuid=uuid_of_user,
+        user_scopes=[scope_of_users],
+    )
     def test_destroy_site(self):
         url_destroy = reverse.reverse('editors:sites-detail', ['test-site-1'])
         response = self.client.delete(url_destroy)

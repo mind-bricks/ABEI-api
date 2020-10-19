@@ -162,6 +162,32 @@ class ProcedureSiteSerializer(serializers.ModelSerializer):
         ]
 
 
+class ProcedureSiteCreateSerializer(ProcedureSiteSerializer):
+    base_sites = ProcedureSiteSerializer(
+        many=True,
+        required=False,
+    )
+
+    class Meta(ProcedureSiteSerializer.Meta):
+        fields = [
+            'base_sites',
+            *ProcedureSiteSerializer.Meta.fields,
+        ]
+
+    def create(self, validated_data):
+        # TODO: avoid recursive dependencies
+
+        base_sites = validated_data.pop('base_sites', [])
+        base_sites = ProcedureSite.objects.filter(
+            user=validated_data['user'],
+            signature__in=[s['signature'] for s in base_sites],
+        ).all()
+
+        instance = super().create(validated_data)
+        instance.base_sites.add(*base_sites)
+        return instance
+
+
 class ProcedureSiteBaseSitesSerializer(serializers.ModelSerializer):
     signature = serializers.CharField(
         source='base.signature',
@@ -192,6 +218,8 @@ class ProcedureSiteBaseSitesCreateSerializer(
 
         if not site:
             raise exceptions.ValidationError('invalid base site')
+
+        # TODO: avoid recursive dependencies
 
         # fill up missing fields and create site relationship
         validated_data['base'] = site
