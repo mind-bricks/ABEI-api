@@ -131,6 +131,16 @@ class ProcedureSiteBaseSitesViewSet(
         except IntegrityError as e:
             raise exceptions.NotAcceptable(str(e))
 
+    def perform_destroy(self, instance):
+        if ProcedureJoint.objects.filter(
+                outer_procedure__site_id=instance.sub_id,
+                inner_procedure__site_id=instance.base_id,
+        ).exists():
+            raise exceptions.PermissionDenied(
+                'can not delete base site while it\'s being referenced')
+
+        instance.delete()
+
 
 class ProcedureViewSet(
     NestedViewSetMixin,
