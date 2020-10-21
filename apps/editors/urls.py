@@ -9,7 +9,7 @@ from rest_framework_extensions import (
 from .views import (
     ProcedureViewSet,
     ProcedureJointViewSet,
-    ProcedureJointInputViewSet,
+    ProcedureJointLinkViewSet,
     ProcedureInputViewSet,
     ProcedureOutputViewSet,
     ProcedureSiteViewSet,
@@ -63,9 +63,9 @@ router_joints = router_procedure.register(
     ],
 )
 router_joints.register(
-    r'inputs',
-    ProcedureJointInputViewSet,
-    basename='procedure-joint-inputs',
+    r'links',
+    ProcedureJointLinkViewSet,
+    basename='procedure-joint-links',
     parents_query_lookups=[
         'joint__outer_procedure__site__signature',
         'joint__outer_procedure__signature',

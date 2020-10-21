@@ -60,7 +60,7 @@ class ProcedureBuilder(object):
             signature=joint.signature,
         )
         # inputs ----------------------
-        inputs = list(joint.inputs.order_by('index').all())
+        inputs = list(joint.links.order_by('index').all())
         input_joints = [
             i.input_joint and
             self.load_model_joint(
@@ -97,7 +97,7 @@ class ProcedureBuilder(object):
         # outputs ----------------------
         outputs = list(
             procedure.outputs.select_related(
-                'detail').order_by('index').all()
+                'output_link').order_by('index').all()
         )
 
         procedure_object = self.factory.create(
@@ -115,15 +115,15 @@ class ProcedureBuilder(object):
 
         # joints ----------------------
         output_joints = [
-            o.detail.output_joint and
+            o.output_link.output_joint and
             self.load_model_joint(
-                o.detail.output_joint,
+                o.output_link.output_joint,
                 procedure_object,
             ) for o in outputs
         ]
 
         output_indices = [
-            o.detail.output_index for o in outputs
+            o.output_link.output_index for o in outputs
         ]
 
         procedure_object.set_joints(

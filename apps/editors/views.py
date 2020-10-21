@@ -25,9 +25,10 @@ from .filters import (
 from .models import (
     Procedure,
     ProcedureJoint,
-    ProcedureJointInput,
+    ProcedureJointLink,
     ProcedureInput,
     ProcedureOutput,
+    ProcedureOutputLink,
     ProcedureSite,
     ProcedureSiteRelationship,
 )
@@ -36,11 +37,11 @@ from .serializers import (
     ProcedureSerializer,
     ProcedureJointSerializer,
     ProcedureJointCreateSerializer,
-    ProcedureJointInputSerializer,
-    ProcedureJointInputCreateSerializer,
+    ProcedureJointLinkSerializer,
+    ProcedureJointLinkCreateSerializer,
     ProcedureInputSerializer,
     ProcedureOutputSerializer,
-    ProcedureOutputDetailSerializer,
+    ProcedureOutputLinkSerializer,
     ProcedureSiteSerializer,
     ProcedureSiteCreateSerializer,
     ProcedureSiteBaseSitesSerializer,
@@ -78,7 +79,7 @@ class ProcedureSiteViewSet(
         try:
             instance.delete()
         except models.ProtectedError as e:
-            raise exceptions.NotAcceptable(str(e))
+            raise exceptions.PermissionDenied(str(e))
 
     @decorators.action(
         methods=['post'],
@@ -129,7 +130,7 @@ class ProcedureSiteBaseSitesViewSet(
                 sub=site,
             )
         except IntegrityError as e:
-            raise exceptions.NotAcceptable(str(e))
+            raise exceptions.PermissionDenied(str(e))
 
     def perform_destroy(self, instance):
         if ProcedureJoint.objects.filter(
@@ -149,7 +150,10 @@ class ProcedureViewSet(
     filter_class = ProcedureFilterSet
     lookup_field = 'signature'
     permission_classes = [UserPermission]
-    queryset = Procedure.objects.all()
+    queryset = Procedure.objects.prefetch_related(
+        'inputs',
+        'outputs',
+    ).all()
     serializer_class = ProcedureSerializer
 
     def get_queryset(self):
@@ -174,13 +178,18 @@ class ProcedureViewSet(
         try:
             serializer.save(site=site)
         except IntegrityError as e:
-            raise exceptions.NotAcceptable(str(e))
+            raise exceptions.PermissionDenied(str(e))
 
     def perform_destroy(self, instance):
         try:
+            # try delete outputs first, for they may
+            # prevent output joints from being deleted.
+            # and with those joints, the owner procedure is
+            # unable to be deleted either.
+            instance.outputs.all().delete()
             instance.delete()
         except models.ProtectedError as e:
-            raise exceptions.NotAcceptable(str(e))
+            raise exceptions.PermissionDenied(str(e))
 
 
 class ProcedureJointViewSet(
@@ -223,20 +232,27 @@ class ProcedureJointViewSet(
                 outer_procedure=outer_procedure,
             )
         except IntegrityError as e:
-            raise exceptions.NotAcceptable(str(e))
+            raise exceptions.PermissionDenied(str(e))
+
+    def perform_destroy(self, instance):
+        try:
+            instance.delete()
+        except models.ProtectedError as e:
+            raise exceptions.PermissionDenied(str(e))
 
 
-class ProcedureJointInputViewSet(
+class ProcedureJointLinkViewSet(
     NestedViewSetMixin,
     mixins.CreateModelMixin,
     mixins.DestroyModelMixin,
     mixins.ListModelMixin,
+    mixins.RetrieveModelMixin,
     viewsets.GenericViewSet,
 ):
     lookup_field = 'index'
     permission_classes = [UserPermission]
-    queryset = ProcedureJointInput.objects.all()
-    serializer_class = ProcedureJointInputSerializer
+    queryset = ProcedureJointLink.objects.all()
+    serializer_class = ProcedureJointLinkSerializer
 
     def get_queryset(self):
         qs = super().get_queryset().filter(
@@ -249,7 +265,7 @@ class ProcedureJointInputViewSet(
 
     def get_serializer_class(self):
         if self.action in ['create']:
-            return ProcedureJointInputCreateSerializer
+            return ProcedureJointLinkCreateSerializer
         return super().get_serializer_class()
 
     def perform_create(self, serializer):
@@ -267,15 +283,16 @@ class ProcedureJointInputViewSet(
             serializer.save(joint=joint)
 
         except IntegrityError as e:
-            raise exceptions.NotAcceptable(str(e))
-
-    def perform_destroy(self, instance):
-        instance.delete()
+            raise exceptions.PermissionDenied(str(e))
 
 
 class ProcedureInputViewSet(
     NestedViewSetMixin,
-    viewsets.ModelViewSet,
+    mixins.CreateModelMixin,
+    mixins.DestroyModelMixin,
+    mixins.ListModelMixin,
+    mixins.RetrieveModelMixin,
+    viewsets.GenericViewSet,
 ):
     lookup_field = 'index'
     permission_classes = [UserPermission]
@@ -308,16 +325,30 @@ class ProcedureInputViewSet(
             raise exceptions.ValidationError(str(e))
 
     def perform_destroy(self, instance):
+        if ProcedureJointLink.objects.filter(
+                joint__inner_procedure_id=instance.procedure_id,
+                index=instance.index,
+        ).exists():
+            raise exceptions.PermissionDenied(
+                'can not delete input while its being referenced')
+
         instance.delete()
 
 
 class ProcedureOutputViewSet(
     NestedViewSetMixin,
-    viewsets.ModelViewSet,
+    mixins.CreateModelMixin,
+    mixins.DestroyModelMixin,
+    mixins.ListModelMixin,
+    mixins.RetrieveModelMixin,
+    viewsets.GenericViewSet,
 ):
     lookup_field = 'index'
     permission_classes = [UserPermission]
-    queryset = ProcedureOutput.objects.select_related('detail').all()
+    queryset = ProcedureOutput.objects.select_related(
+        'procedure',
+        'output_link',
+    ).all()
     serializer_class = ProcedureOutputSerializer
 
     def get_queryset(self):
@@ -346,33 +377,49 @@ class ProcedureOutputViewSet(
             raise exceptions.ValidationError(str(e))
 
     def perform_destroy(self, instance):
+        if (
+                ProcedureJointLink.objects.filter(
+                    input_joint__inner_procedure_id=instance.procedure_id,
+                    input_index=instance.index,
+                ).exists() or
+
+                ProcedureOutputLink.objects.filter(
+                    output_joint__inner_procedure_id=instance.procedure_id,
+                    output_index=instance.index,
+                ).exists()
+        ):
+            raise exceptions.PermissionDenied(
+                'can not delete output while its being referenced')
+
         instance.delete()
 
     @decorators.action(
-        url_name='detail',
-        url_path='detail',
-        detail=False,
+        url_name='link',
+        url_path='link',
+        detail=True,
         permission_classes=[UserPermission],
-        serializer_class=ProcedureOutputDetailSerializer,
+        serializer_class=ProcedureOutputLinkSerializer,
     )
-    def detail(self, request):
+    def link(self, request, *args, **kwargs):
         instance = self.get_object()
-        instance = getattr(instance, 'detail', None)
+        instance = getattr(instance, 'output_link', None)
         if not instance:
             raise exceptions.NotFound()
 
         serializer = self.get_serializer(instance=instance)
         return response.Response(serializer.data)
 
-    @detail.mapping.put
-    def set_detail(self, request):
+    @link.mapping.put
+    def set_link(self, request, *args, **kwargs):
         instance_base = self.get_object()
-        instance = getattr(instance_base, 'detail', None)
+        instance = getattr(instance_base, 'output_link', None)
         serializer = self.get_serializer(
             instance=instance,
             data=request.data,
         )
 
         serializer.is_valid(raise_exception=True)
-        serializer.save(output=instance_base)
+        serializer.save(
+            output=instance_base,
+        )
         return response.Response(serializer.data)

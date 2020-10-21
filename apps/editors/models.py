@@ -90,17 +90,17 @@ class ProcedureJoint(models.Model):
         ]
 
 
-class ProcedureJointInput(models.Model):
+class ProcedureJointLink(models.Model):
     input_joint = models.ForeignKey(
         ProcedureJoint,
         null=True,
-        related_name='input_references',
+        related_name='link_references',
         on_delete=models.PROTECT,
     )
     input_index = models.SmallIntegerField()
     joint = models.ForeignKey(
         ProcedureJoint,
-        related_name='inputs',
+        related_name='links',
         on_delete=models.CASCADE,
     )
     index = models.SmallIntegerField()
@@ -145,16 +145,16 @@ class ProcedureOutput(models.Model):
         ]
 
 
-class ProcedureOutputDetail(models.Model):
+class ProcedureOutputLink(models.Model):
     output = models.OneToOneField(
         ProcedureOutput,
-        related_name='detail',
+        related_name='output_link',
         on_delete=models.CASCADE,
     )
     output_joint = models.ForeignKey(
         ProcedureJoint,
         null=True,
-        related_name='output_references',
+        related_name='output_link',
         on_delete=models.PROTECT,
     )
     output_index = models.SmallIntegerField()

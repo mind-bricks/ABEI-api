@@ -77,11 +77,29 @@
   },
   {
     "model": "editors.procedureoutput",
-    "pk": 3,
+    "pk": 1,
+    "fields": {
+      "procedure": 1,
+      "signature": "test-procedure-1-output-1",
+      "index": 0
+    }
+  },
+  {
+    "model": "editors.procedureoutput",
+    "pk": 2,
     "fields": {
       "procedure": 2,
       "signature": "test-procedure-2-output-1",
       "index": 0
+    }
+  },
+  {
+    "model": "editors.procedureoutputlink",
+    "pk": 2,
+    "fields": {
+      "output": 2,
+      "output_joint": 1,
+      "output_index": 0
     }
   },
   {
@@ -94,7 +112,16 @@
     }
   },
   {
-    "model": "editors.procedurejointinput",
+    "model": "editors.procedurejoint",
+    "pk": 2,
+    "fields": {
+      "inner_procedure": 1,
+      "outer_procedure": 2,
+      "signature": "test-procedure-2-joint-2"
+    }
+  },
+  {
+    "model": "editors.procedurejointlink",
     "pk": 1,
     "fields": {
       "input_index": 0,

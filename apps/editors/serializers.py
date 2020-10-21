@@ -7,22 +7,22 @@ from .models import (
     Procedure,
     ProcedureInput,
     ProcedureOutput,
-    ProcedureOutputDetail,
+    ProcedureOutputLink,
     ProcedureJoint,
-    ProcedureJointInput,
+    ProcedureJointLink,
     ProcedureSite,
     ProcedureSiteRelationship,
 )
 
 
-class ProcedureJointInputSerializer(serializers.ModelSerializer):
+class ProcedureJointLinkSerializer(serializers.ModelSerializer):
     input_joint = serializers.CharField(
         source='input_joint.signature',
         read_only=True,
     )
 
     class Meta:
-        model = ProcedureJointInput
+        model = ProcedureJointLink
         fields = [
             'index',
             'input_joint',
@@ -30,8 +30,8 @@ class ProcedureJointInputSerializer(serializers.ModelSerializer):
         ]
 
 
-class ProcedureJointInputCreateSerializer(
-    ProcedureJointInputSerializer
+class ProcedureJointLinkCreateSerializer(
+    ProcedureJointLinkSerializer
 ):
     input_joint = serializers.CharField(
         source='input_joint.signature',
@@ -70,7 +70,7 @@ class ProcedureJointSerializer(serializers.ModelSerializer):
         source='inner_procedure.signature',
         read_only=True,
     )
-    inputs = ProcedureJointInputSerializer(
+    inputs = ProcedureJointLinkSerializer(
         many=True,
         read_only=True,
     )
@@ -130,19 +130,44 @@ class ProcedureInputSerializer(serializers.ModelSerializer):
         ]
 
 
-class ProcedureOutputDetailSerializer(serializers.ModelSerializer):
-    output_joint = serializers.SlugRelatedField(
-        slug_field='signature',
+class ProcedureOutputLinkSerializer(serializers.ModelSerializer):
+    output_joint = serializers.CharField(
+        source='output_joint.signature',
         allow_null=True,
-        read_only=True,
     )
 
     class Meta:
-        model = ProcedureOutputDetail
+        model = ProcedureOutputLink
         fields = [
             'output_joint',
             'output_index',
         ]
+
+    @staticmethod
+    def load_joint(validated_data, field):
+        output = validated_data['output']
+        joint_signature = validated_data[field]['signature']
+        if joint_signature:
+            joint = ProcedureJoint.objects.filter(
+                outer_procedure=output.procedure,
+                signature=joint_signature,
+            ).first()
+
+            if not joint:
+                raise exceptions.ValidationError(
+                    'invalid output joint')
+
+            validated_data[field] = joint
+        else:
+            validated_data[field] = None
+
+    def create(self, validated_data):
+        self.load_joint(validated_data, 'output_joint')
+        return super().create(validated_data)
+
+    def update(self, instance, validated_data):
+        self.load_joint(validated_data, 'output_joint')
+        return super().update(instance, validated_data)
 
 
 class ProcedureOutputSerializer(serializers.ModelSerializer):

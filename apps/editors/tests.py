@@ -81,11 +81,11 @@ class ProcedureSiteTest(test.APITestCase):
     def test_destroy_site(self):
         url_destroy = reverse.reverse('editors:sites-detail', ['test-site-1'])
         response = self.client.delete(url_destroy)
-        self.assertEqual(response.status_code, status.HTTP_406_NOT_ACCEPTABLE)
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
         url_destroy = reverse.reverse('editors:sites-detail', ['test-site-2'])
         response = self.client.delete(url_destroy)
-        self.assertEqual(response.status_code, status.HTTP_406_NOT_ACCEPTABLE)
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
         url_destroy = reverse.reverse('editors:sites-detail', ['test-site-3'])
         response = self.client.delete(url_destroy)
@@ -121,7 +121,7 @@ class ProcedureSiteTest(test.APITestCase):
 
         response = self.client.post(
             url_base_sites, data={'signature': 'test-site-1'})
-        self.assertEqual(response.status_code, status.HTTP_406_NOT_ACCEPTABLE)
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
     @test.authentication_mock(
         user_uuid=uuid_of_user,
@@ -163,6 +163,12 @@ class ProcedureSiteTest(test.APITestCase):
         response = self.client.delete(url_base_sites)
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
 
+        # can not delete base site whose procedure has been reference
+        url_base_sites = reverse.reverse(
+            'editors:site-base-sites-detail', ['test-site-2', 'test-site-1'])
+        response = self.client.delete(url_base_sites)
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
         url_base_sites = reverse.reverse(
             'editors:site-base-sites-detail', ['test-site-3', 'test-site-1'])
         response = self.client.delete(url_base_sites)
@@ -201,7 +207,7 @@ class ProcedureTest(test.APITestCase):
         url_detail_1 = reverse.reverse(
             'editors:procedures-detail', ['test-site-1', 'test-procedure-1'])
         response = self.client.delete(url_detail_1)
-        self.assertEqual(response.status_code, status.HTTP_406_NOT_ACCEPTABLE)
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
         url_detail_2 = reverse.reverse(
             'editors:procedures-detail', ['test-site-2', 'test-procedure-2'])
@@ -257,7 +263,7 @@ class ProcedureTest(test.APITestCase):
     def test_create_procedure_input(self):
         url_input_list = reverse.reverse(
             'editors:procedure-inputs-list',
-            ['test-site-1', 'test-procedure-1']
+            ['test-site-1', 'test-procedure-1'],
         )
         response = self.client.post(url_input_list, data={
             'signature': 'test-input-1',
@@ -277,9 +283,17 @@ class ProcedureTest(test.APITestCase):
         user_scopes=[scope_of_users]
     )
     def test_destroy_procedure_input(self):
+        # can not delete input which has been referenced
         url_input_detail = reverse.reverse(
             'editors:procedure-inputs-detail',
-            ['test-site-1', 'test-procedure-1', 0]
+            ['test-site-1', 'test-procedure-1', 0],
+        )
+        response = self.client.delete(url_input_detail)
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+        url_input_detail = reverse.reverse(
+            'editors:procedure-inputs-detail',
+            ['test-site-2', 'test-procedure-2', 0],
         )
         response = self.client.delete(url_input_detail)
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
@@ -313,18 +327,19 @@ class ProcedureTest(test.APITestCase):
             'index': 10,
             'signature': 'test-input-10',
         })
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response.data.get('index'), 10)
-
-        response = self.client.get(url_input_detail)
-        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
-
-        url_input_detail = reverse.reverse(
-            'editors:procedure-inputs-detail',
-            ['test-site-1', 'test-procedure-1', 10])
-        response = self.client.get(url_input_detail)
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response.data.get('index'), 10)
+        self.assertEqual(
+            response.status_code, status.HTTP_405_METHOD_NOT_ALLOWED)
+        # self.assertEqual(response.data.get('index'), 10)
+        #
+        # response = self.client.get(url_input_detail)
+        # self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+        #
+        # url_input_detail = reverse.reverse(
+        #     'editors:procedure-inputs-detail',
+        #     ['test-site-1', 'test-procedure-1', 10])
+        # response = self.client.get(url_input_detail)
+        # self.assertEqual(response.status_code, status.HTTP_200_OK)
+        # self.assertEqual(response.data.get('index'), 10)
 
 
 class ProcedureJointTest(test.APITestCase):
@@ -363,7 +378,7 @@ class ProcedureJointTest(test.APITestCase):
         url_detail = reverse.reverse('editors:procedure-joints-detail', [
             'test-site-2',
             'test-procedure-2',
-            'test-procedure-2-joint-1',
+            'test-procedure-2-joint-2',
         ])
         response = self.client.delete(url_detail)
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
@@ -379,7 +394,7 @@ class ProcedureJointTest(test.APITestCase):
         )
         response = self.client.get(url_list)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response.data.get('count'), 1)
+        self.assertEqual(response.data.get('count'), 2)
 
     @test.authentication_mock(
         user_uuid=uuid_of_user,
@@ -422,8 +437,8 @@ class ProcedureJointTest(test.APITestCase):
         user_uuid=uuid_of_user,
         user_scopes=[scope_of_users]
     )
-    def test_create_joint_input(self):
-        url_list = reverse.reverse('editors:procedure-joint-inputs-list', [
+    def test_create_joint_link(self):
+        url_list = reverse.reverse('editors:procedure-joint-links-list', [
             'test-site-2',
             'test-procedure-2',
             'test-procedure-2-joint-1',
@@ -449,15 +464,15 @@ class ProcedureJointTest(test.APITestCase):
             'index': 0,
             'input_index': 0,
         })
-        self.assertEqual(response.status_code, status.HTTP_406_NOT_ACCEPTABLE)
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
     @test.authentication_mock(
         user_uuid=uuid_of_user,
         user_scopes=[scope_of_users]
     )
-    def test_destroy_joint_input(self):
+    def test_destroy_joint_link(self):
         url_detail = reverse.reverse(
-            'editors:procedure-joint-inputs-detail',
+            'editors:procedure-joint-links-detail',
             [
                 'test-site-2',
                 'test-procedure-2',
@@ -472,8 +487,8 @@ class ProcedureJointTest(test.APITestCase):
         user_uuid=uuid_of_user,
         user_scopes=[scope_of_users]
     )
-    def test_list_joint_input(self):
-        url_list = reverse.reverse('editors:procedure-joint-inputs-list', [
+    def test_list_joint_link(self):
+        url_list = reverse.reverse('editors:procedure-joint-links-list', [
             'test-site-2',
             'test-procedure-2',
             'test-procedure-2-joint-1',
@@ -513,6 +528,14 @@ class ProcedureOutputTest(test.APITestCase):
     )
     def test_destroy_output(self):
         url_detail = reverse.reverse('editors:procedure-outputs-detail', [
+            'test-site-1',
+            'test-procedure-1',
+            0,
+        ])
+        response = self.client.delete(url_detail)
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+        url_detail = reverse.reverse('editors:procedure-outputs-detail', [
             'test-site-2',
             'test-procedure-2',
             0,
@@ -547,10 +570,11 @@ class ProcedureOutputTest(test.APITestCase):
             'signature': 'test-procedure-2-output-3',
             'index': 3,
         })
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(
-            response.data.get('signature'), 'test-procedure-2-output-3')
-        self.assertEqual(response.data.get('index'), 3)
+            response.status_code, status.HTTP_405_METHOD_NOT_ALLOWED)
+        # self.assertEqual(
+        #     response.data.get('signature'), 'test-procedure-2-output-3')
+        # self.assertEqual(response.data.get('index'), 3)
 
     @test.authentication_mock(
         user_uuid=uuid_of_user,
@@ -567,3 +591,51 @@ class ProcedureOutputTest(test.APITestCase):
         self.assertEqual(
             response.data.get('signature'), 'test-procedure-2-output-1')
         self.assertEqual(response.data.get('index'), 0)
+
+    @test.authentication_mock(
+        user_uuid=uuid_of_user,
+        user_scopes=[scope_of_users]
+    )
+    def test_retrieve_output_link(self):
+        url_detail = reverse.reverse('editors:procedure-outputs-link', [
+            'test-site-2',
+            'test-procedure-2',
+            0,
+        ])
+        response = self.client.get(url_detail)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(
+            response.data.get('output_joint'), 'test-procedure-2-joint-1')
+        self.assertEqual(response.data.get('output_index'), 0)
+
+        url_detail = reverse.reverse('editors:procedure-outputs-link', [
+            'test-site-2',
+            'test-procedure-2',
+            1,
+        ])
+        response = self.client.get(url_detail)
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+    @test.authentication_mock(
+        user_uuid=uuid_of_user,
+        user_scopes=[scope_of_users]
+    )
+    def test_update_output_link(self):
+        url_detail = reverse.reverse('editors:procedure-outputs-link', [
+            'test-site-2',
+            'test-procedure-2',
+            0,
+        ])
+        response = self.client.put(url_detail, data={
+            'output_joint': 'test-procedure-2-joint-0',
+            'output_index': 0
+        })
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+        response = self.client.put(url_detail, data={
+            'output_joint': 'test-procedure-2-joint-2',
+            'output_index': 0
+        })
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(
+            response.data.get('output_joint'), 'test-procedure-2-joint-2')
