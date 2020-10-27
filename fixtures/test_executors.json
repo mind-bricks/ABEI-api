@@ -32,7 +32,7 @@
     "model": "editors.procedure",
     "pk": 2,
     "fields": {
-      "signature": "float@py:add@py",
+      "signature": "float-add",
       "docstring": "native add",
       "site": 1
     }
@@ -41,7 +41,7 @@
     "model": "editors.procedure",
     "pk": 3,
     "fields": {
-      "signature": "float@py:mul@py",
+      "signature": "float-mul",
       "docstring": "native multiply",
       "site": 1
     }
@@ -51,7 +51,7 @@
     "pk": 1,
     "fields": {
       "procedure": 1,
-      "signature": "float@py",
+      "signature": "float",
       "index": 0
     }
   },
@@ -60,7 +60,7 @@
     "pk": 2,
     "fields": {
       "procedure": 1,
-      "signature": "float@py",
+      "signature": "float",
       "index": 1
     }
   },
@@ -69,7 +69,7 @@
     "pk": 1,
     "fields": {
       "procedure": 1,
-      "signature": "float@py",
+      "signature": "float",
       "index": 0
     }
   },
@@ -78,7 +78,7 @@
     "pk": 2,
     "fields": {
       "procedure": 1,
-      "signature": "float@py",
+      "signature": "float",
       "index": 1
     }
   },

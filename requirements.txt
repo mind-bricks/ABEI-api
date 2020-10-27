@@ -1,4 +1,4 @@
-abei==0.0.3
+abei==0.0.4
 Django==2.2.8
 django-cors-middleware==1.5.0
 django-filter==2.4.0

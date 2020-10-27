@@ -101,7 +101,7 @@ class ProcedureBuilder(object):
         )
 
         procedure_object = self.factory.create(
-            'composite@py',
+            'composite',
             signature=procedure.signature,
             docstring=procedure.docstring,
             input_signatures=[i.signature for i in inputs],

@@ -70,7 +70,7 @@ class ProcedureJointSerializer(serializers.ModelSerializer):
         source='inner_procedure.signature',
         read_only=True,
     )
-    inputs = ProcedureJointLinkSerializer(
+    links = ProcedureJointLinkSerializer(
         many=True,
         read_only=True,
     )
@@ -81,7 +81,7 @@ class ProcedureJointSerializer(serializers.ModelSerializer):
             'signature',
             'site',
             'procedure',
-            'inputs',
+            'links',
         ]
 
 

@@ -432,6 +432,7 @@ class ProcedureJointTest(test.APITestCase):
             response.data.get('procedure'), 'test-procedure-1')
         self.assertEqual(
             response.data.get('signature'), 'test-procedure-2-joint-1')
+        self.assertIsInstance(response.data.get('links'), list)
 
     @test.authentication_mock(
         user_uuid=uuid_of_user,
